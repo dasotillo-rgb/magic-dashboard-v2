@@ -3,90 +3,81 @@ import React, { useState, useEffect } from 'react';
 
 export default function MagicOS() {
   const [activeTab, setActiveTab] = useState('Command Center');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
-
+  const [settings, setSettings] = useState({ language: 'ES', industry: 'Finance/Tech' });
 
   return (
-    <div className="main-layout">
+    <div className="main-container">
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; }
-        .main-layout {
-          display: flex;
-          height: 100vh;
-          background-color: #000;
-          color: #fff;
-          font-family: 'Inter', sans-serif;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body { margin: 0; background: #000; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        
+        .main-container { display: flex; height: 100vh; background: radial-gradient(circle at 50% 50%, #0d0d1a 0%, #000 100%); }
+
+        /* SIDEBAR GLASS */
         .sidebar {
           width: 280px;
-          background: rgba(10, 10, 10, 0.6);
-          backdrop-filter: blur(30px);
-          border-right: 1px solid #1a1a1a;
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(40px);
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 40px 20px;
           display: flex;
           flex-direction: column;
-          padding: 40px 20px;
         }
+
         .nav-item {
-          padding: 14px 20px;
-          margin: 8px 0;
-          border-radius: 14px;
-          color: #555;
+          padding: 14px 18px;
+          margin: 4px 0;
+          border-radius: 16px;
+          color: #888;
           cursor: pointer;
           font-size: 14px;
-          font-weight: 500;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          display: flex;
-          align-items: center;
-          gap: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
         }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .nav-item.active {
-          background: #111;
-          color: #fff;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-          border: 1px solid #222;
-        }
-        .content-area {
-          flex: 1;
-          padding: 60px;
-          overflow-y: auto;
-          background: radial-gradient(circle at top right, #0a0a1a, #000);
-        }
-        .card {
-          background: #0d0d0d;
-          border: 1px solid #1a1a1a;
-          border-radius: 28px;
+        .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* GLASS CARDS */
+        .glass-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 32px;
           padding: 30px;
-          transition: all 0.4s ease;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          overflow: hidden;
         }
-        .card:hover { transform: translateY(-5px); border-color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn-primary {
-          background: #fff;
-          color: #000;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: 0.2s;
+        .glass-card:hover { 
+          background: rgba(255, 255, 255, 0.06); 
+          border-color: rgba(255, 255, 255, 0.2);
+          transform: translateY(-8px);
         }
-        .btn-primary:hover { transform: scale(1.05); }
+
+        .scroll-area { flex: 1; padding: 60px; overflow-y: auto; }
+        
+        input, select {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          padding: 10px;
+          border-radius: 8px;
+          width: 100%;
+          margin-top: 10px;
+        }
       `}</style>
 
       {/* SIDEBAR */}
       <aside className="sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '60px', padding: '0 10px' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#00d4ff" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase' }}>APE Intelligence</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '50px' }}>
+          <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '20px' }}>⚡</span>
+          </div>
+          <span style={{ fontWeight: '800', letterSpacing: '0.5px' }}>APE INTEL</span>
         </div>
 
-        <nav>
-          {['Command Center', 'Trading Lab', 'AI Proposals', 'Project Board', 'News Feed'].map(item => (
+        <nav style={{ flex: 1 }}>
+          {['Command Center', 'Trading Lab', 'AI Proposals', 'Global News', 'Settings'].map(item => (
             <div 
               key={item} 
               className={`nav-item ${activeTab === item ? 'active' : ''}`}
@@ -99,53 +90,65 @@ export default function MagicOS() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="content-area">
-        <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '50px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-1.5px', margin: 0 }}>MAGIC DASHBOARD</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#39ff14', fontSize: '11px', fontWeight: '800' }}>
-            <div style={{ width: '6px', height: '6px', background: '#39ff14', borderRadius: '50%' }} /> ONLINE
-          </div>
+      <main className="scroll-area">
+        <header style={{ marginBottom: '50px' }}>
+          <h1 style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-2px', margin: 0 }}>{activeTab.toUpperCase()}</h1>
         </header>
 
-        {/* CONTENIDO DINÁMICO SEGÚN PESTAÑA */}
         {activeTab === 'Command Center' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '30px' }}>
-            <div className="card" style={{ gridColumn: 'span 4' }}>
-              <span style={{ color: '#444', fontSize: '10px', fontWeight: '800' }}>TREND SIGNAL</span>
-              <h2 style={{ color: '#39ff14', fontSize: '34px', margin: '10px 0 0 0' }}>LONG_ENTRY</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '25px' }}>
+            
+            {/* WIDGET CLIMA/INFO */}
+            <div className="glass-card" style={{ gridColumn: 'span 4' }}>
+              <div style={{ color: '#00d4ff', fontSize: '11px', fontWeight: '800', marginBottom: '15px' }}>LOCAL ENVIRONMENT</div>
+              <h2 style={{ fontSize: '28px', margin: 0 }}>Benicàssim</h2>
+              <p style={{ color: '#666', fontSize: '15px' }}>Sunny • 17°C • Winds 10km/h</p>
             </div>
-            <div className="card" style={{ gridColumn: 'span 4' }}>
-              <span style={{ color: '#444', fontSize: '10px', fontWeight: '800' }}>CASH FLOW</span>
-              <h2 style={{ color: '#fff', fontSize: '34px', margin: '10px 0 0 0' }}>+.50</h2>
+
+            {/* WIDGET NEWS CUSTOMIZABLE */}
+            <div className="glass-card" style={{ gridColumn: 'span 4' }}>
+              <div style={{ color: '#ff9500', fontSize: '11px', fontWeight: '800', marginBottom: '15px' }}>{settings.industry.toUpperCase()} FEED</div>
+              <div style={{ fontSize: '14px', lineHeight: '1.8' }}>
+                <div>• BTC Consolidation at 02k</div>
+                <div>• AI Compute demand spikes 40%</div>
+              </div>
             </div>
-            <div className="card" style={{ gridColumn: 'span 4', background: 'rgba(255,255,255,0.02)' }}>
-              <span style={{ color: '#00d4ff', fontSize: '10px', fontWeight: '800' }}>ENVIRONMENT</span>
-              <h2 style={{ fontSize: '20px', margin: '10px 0 0 0' }}>Benicàssim, ES</h2>
-              <p style={{ color: '#444', margin: '5px 0 0 0' }}>17°C • Winds 10km/h</p>
+
+            {/* WIDGET CHAT DIRECTO (GEMINI) */}
+            <div className="glass-card" style={{ gridColumn: 'span 4', border: '1px solid #7c3aed' }}>
+              <div style={{ color: '#7c3aed', fontSize: '11px', fontWeight: '800', marginBottom: '10px' }}>DIRECT COMM</div>
+              <div style={{ height: '80px', fontSize: '13px', color: '#aaa', overflow: 'hidden' }}>
+                Listo para ejecutar. ¿Cuál es el siguiente paso, Founder?
+              </div>
+              <input placeholder="Escribe aquí..." style={{ fontSize: '12px' }} />
             </div>
-            <div className="card" style={{ gridColumn: 'span 8', background: 'linear-gradient(135deg, #1e3a8a, #4c1d95)', border: 'none' }}>
-              <h3 style={{ fontSize: '28px', margin: '0 0 20px 0' }}>AI Strategy Hub</h3>
-              <p style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', marginBottom: '30px' }}>
-                Motor de Gemini analizando mercados locales en Benicàssim. Tu próxima propuesta de negocio está siendo procesada.
-              </p>
-              <button className="btn-primary">SYNC NOTION</button>
-            </div>
-            <div className="card" style={{ gridColumn: 'span 4' }}>
-              <h3 style={{ fontSize: '11px', color: '#ff9500', margin: '0 0 20px 0', textTransform: 'uppercase' }}>Financial Pulse</h3>
-              <div style={{ fontSize: '13px', color: '#eee', borderBottom: '1px solid #1a1a1a', paddingBottom: '12px', marginBottom: '12px' }}>BTC Resistance: <span style={{color: '#39ff14'}}>02,400</span></div>
-              <div style={{ fontSize: '13px', color: '#eee' }}>Sentiment: <span style={{color: '#bc13fe'}}>Bullish</span></div>
+
+            {/* AI PROPOSALS (CENTRAL) */}
+            <div className="glass-card" style={{ gridColumn: 'span 8', background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(124, 58, 237, 0.4))' }}>
+              <h3 style={{ fontSize: '24px', marginBottom: '15px' }}>AI BUSINESS STRATEGY</h3>
+              <p style={{ color: '#ccc', fontSize: '16px' }}>Sincronizando con bases de datos para generar la propuesta de alta rentabilidad del día.</p>
+              <button style={{ background: '#fff', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: '700', marginTop: '10px' }}>EJECUTAR EN NOTION</button>
             </div>
           </div>
         )}
 
-        {activeTab === 'Trading Lab' && (
-          <div className="card">
-            <h2>Trading Lab Interface</h2>
-            <p style={{color: '#666'}}>Conectando con Binance API y Trend Signal V1...</p>
+        {activeTab === 'Settings' && (
+          <div className="glass-card" style={{ maxWidth: '600px' }}>
+            <h2 style={{ marginBottom: '30px' }}>System Configuration</h2>
+            <label style={{ fontSize: '12px', color: '#666' }}>Language / Idioma</label>
+            <select onChange={(e) => setSettings({...settings, language: e.target.value})}>
+              <option value="ES">Español</option>
+              <option value="EN">English</option>
+            </select>
+            
+            <label style={{ fontSize: '12px', color: '#666', display: 'block', marginTop: '20px' }}>Industry Focus (API News Feed)</label>
+            <select onChange={(e) => setSettings({...settings, industry: e.target.value})}>
+              <option value="Finance/Tech">Finance & Technology</option>
+              <option value="Food">Food & Beverage</option>
+              <option value="Chemical">Chemical Industry</option>
+            </select>
           </div>
         )}
-        
-        {/* Espacio para otras pestañas... */}
       </main>
     </div>
   );
