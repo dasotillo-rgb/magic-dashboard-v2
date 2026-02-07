@@ -1,33 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function AtomicDashboard() {
-  const metrics = [
-    { label: 'Capital Flow', value: '2,500', change: '+12%', color: '#39ff14' },
-    { label: 'Active Bots', value: '3', change: 'Stable', color: '#00d4ff' },
-    { label: 'Market Pulse', value: 'Bullish', change: 'High', color: '#bc13fe' }
-  ];
+  const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString());
+  
+  // Simulando la entrada de datos que Ape conectará con el bot real
+  const [data, setData] = useState({
+    capital: 42500,
+    activeBots: 3,
+    marketPulse: 'Bullish'
+  });
+
+  const [logs, setLogs] = useState([
+    'System initialized...',
+    'Ape engine connected to AWS',
+    'Waiting for next market cycle...'
+  ]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimestamp(new Date().toLocaleTimeString());
+      // Aquí Ape inyectará la conexión real por API
+      setData(prev => ({ ...prev, capital: prev.capital + (Math.random() * 10 - 5) }));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div style={{ backgroundColor: '#050505', minHeight: '100vh', color: 'white', fontFamily: 'sans-serif', padding: '40px' }}>
-      <header style={{ borderBottom: '1px solid #222', paddingBottom: '20px', marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0, fontSize: '24px', letterSpacing: '2px', color: '#00d4ff' }}>MAGIC DASHBOARD <span style={{ color: '#333' }}>V2</span></h1>
-        <div style={{ backgroundColor: '#111', padding: '8px 16px', borderRadius: '20px', fontSize: '12px', border: '1px solid #333' }}>
-          <span style={{ color: '#39ff14' }}>●</span> APE SYSTEM CONNECTED
-        </div>
+    <div style={{ backgroundColor: '#050505', minHeight: '100vh', color: 'white', fontFamily: 'monospace', padding: '30px' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1a1a1a', paddingBottom: '15px', marginBottom: '30px' }}>
+        <h1 style={{ fontSize: '20px', color: '#00d4ff', margin: 0 }}>MAGIC_OS // V2.0</h1>
+        <div style={{ color: '#39ff14', fontSize: '14px' }}>[ LIVE: {timestamp} ]</div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-        {metrics.map((m, i) => (
-          <div key={i} style={{ backgroundColor: '#0a0a0a', padding: '24px', borderRadius: '12px', border: '1px solid #1a1a1a', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-            <p style={{ color: '#666', fontSize: '14px', margin: '0 0 10px 0', textTransform: 'uppercase' }}>{m.label}</p>
-            <h2 style={{ fontSize: '32px', margin: '0 0 10px 0', color: m.color }}>{m.value}</h2>
-            <span style={{ fontSize: '12px', color: '#444' }}>Trend: {m.change}</span>
-          </div>
-        ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+        <div style={{ border: '1px solid #1a1a1a', padding: '20px', borderRadius: '4px' }}>
+          <p style={{ color: '#666', fontSize: '12px', margin: '0 0 10px 0' }}>TOTAL_CAPITAL_FLOW</p>
+          <h2 style={{ fontSize: '36px', color: '#39ff14', margin: 0 }}>${data.capital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+        </div>
+        <div style={{ border: '1px solid #1a1a1a', padding: '20px', borderRadius: '4px' }}>
+          <p style={{ color: '#666', fontSize: '12px', margin: '0 0 10px 0' }}>ACTIVE_INSTANCES</p>
+          <h2 style={{ fontSize: '36px', color: '#00d4ff', margin: 0 }}>{data.activeBots}</h2>
+        </div>
+        <div style={{ border: '1px solid #1a1a1a', padding: '20px', borderRadius: '4px' }}>
+          <p style={{ color: '#666', fontSize: '12px', margin: '0 0 10px 0' }}>MARKET_PULSE</p>
+          <h2 style={{ fontSize: '36px', color: '#bc13fe', margin: 0 }}>{data.marketPulse}</h2>
+        </div>
       </div>
 
-      <footer style={{ marginTop: '60px', color: '#333', fontSize: '12px', textAlign: 'center' }}>
-        PR REVIEWS PENDING • ONE-PERSON BUSINESS EFFICIENCY • 2026
+      <div style={{ backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a', padding: '20px', borderRadius: '4px' }}>
+        <p style={{ color: '#00d4ff', fontSize: '12px', marginBottom: '15px' }}>SYSTEM_LOGS_VIEWER</p>
+        <div style={{ height: '150px', overflowY: 'hidden', color: '#444', fontSize: '13px', lineHeight: '1.6' }}>
+          {logs.map((log, i) => (
+            <div key={i}>> {log}</div>
+          ))}
+          <div style={{ color: '#39ff14' }}>> Monitoring market trends 24/7...</div>
+        </div>
+      </div>
+
+      <footer style={{ marginTop: '40px', fontSize: '10px', color: '#222', textAlign: 'center' }}>
+        UNIPERSONAL_ENT_EFFICIENCY_MAX // NO_PR_PENDING
       </footer>
     </div>
   );
