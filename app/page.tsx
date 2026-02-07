@@ -2,25 +2,14 @@
 import React, { useState, useEffect } from 'react';
 
 export default function AtomicDashboard() {
-  const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString());
-  
-  // Simulando la entrada de datos que Ape conectará con el bot real
-  const [data, setData] = useState({
-    capital: 42500,
-    activeBots: 3,
-    marketPulse: 'Bullish'
-  });
-
-  const [logs, setLogs] = useState([
-    'System initialized...',
-    'Ape engine connected to AWS',
-    'Waiting for next market cycle...'
-  ]);
+  const [timestamp, setTimestamp] = useState('');
+  const [data, setData] = useState({ capital: 42500, activeBots: 3, marketPulse: 'Bullish' });
+  const [logs] = useState(['System initialized...', 'Ape engine connected', 'Monitoring markets...']);
 
   useEffect(() => {
+    setTimestamp(new Date().toLocaleTimeString());
     const interval = setInterval(() => {
       setTimestamp(new Date().toLocaleTimeString());
-      // Aquí Ape inyectará la conexión real por API
       setData(prev => ({ ...prev, capital: prev.capital + (Math.random() * 10 - 5) }));
     }, 5000);
     return () => clearInterval(interval);
@@ -52,15 +41,11 @@ export default function AtomicDashboard() {
         <p style={{ color: '#00d4ff', fontSize: '12px', marginBottom: '15px' }}>SYSTEM_LOGS_VIEWER</p>
         <div style={{ height: '150px', overflowY: 'hidden', color: '#444', fontSize: '13px', lineHeight: '1.6' }}>
           {logs.map((log, i) => (
-            <div key={i}>> {log}</div>
+            <div key={i}>{'>'} {log}</div>
           ))}
-          <div style={{ color: '#39ff14' }}>> Monitoring market trends 24/7...</div>
+          <div style={{ color: '#39ff14' }}>{'>'} Ready for next operation...</div>
         </div>
       </div>
-
-      <footer style={{ marginTop: '40px', fontSize: '10px', color: '#222', textAlign: 'center' }}>
-        UNIPERSONAL_ENT_EFFICIENCY_MAX // NO_PR_PENDING
-      </footer>
     </div>
   );
 }
