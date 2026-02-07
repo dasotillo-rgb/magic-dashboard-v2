@@ -12,11 +12,11 @@ const Icons = {
 };
 
 export default function ApeOSV2() {
-  const [time, setTime] = useState(new Set().add(new Date()));
+  // CORRECCIÓN: Estado inicial de fecha simple
+  const [time, setTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState('Overview');
   const [syncStatus, setSyncStatus] = useState('Idle');
   
-  // Efecto para reloj en tiempo real
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -24,7 +24,6 @@ export default function ApeOSV2() {
 
   const handleSyncNotion = async () => {
     setSyncStatus('Syncing...');
-    // Simulación de API call a Notion
     setTimeout(() => setSyncStatus('Success'), 2000);
     setTimeout(() => setSyncStatus('Idle'), 5000);
   };
@@ -51,7 +50,6 @@ export default function ApeOSV2() {
 
         .container { display: flex; height: 100vh; background: radial-gradient(circle at 0% 0%, #111 0%, #030303 100%); }
 
-        /* Sidebar */
         .sidebar {
           width: 260px; border-right: 1px solid var(--border);
           padding: 40px 24px; display: flex; flex-direction: column;
@@ -65,11 +63,9 @@ export default function ApeOSV2() {
         }
         .nav-item.active { background: var(--border); color: white; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 
-        /* Main Viewport */
         .viewport { flex: 1; overflow-y: auto; padding: 40px 60px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         
-        /* Grid System */
         .dashboard-grid {
           display: grid;
           grid-template-columns: repeat(12, 1fr);
@@ -77,7 +73,6 @@ export default function ApeOSV2() {
           gap: 24px;
         }
 
-        /* Widgets */
         .widget {
           background: var(--glass);
           border: 1px solid var(--border);
@@ -91,12 +86,10 @@ export default function ApeOSV2() {
 
         .widget-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #555; margin-bottom: 20px; display: block; }
         
-        /* Typography */
         .val-lg { font-size: 38px; font-weight: 800; font-family: 'Space Grotesk'; letter-spacing: -1px; }
         .val-md { font-size: 22px; font-weight: 600; }
         .text-mute { color: #888; font-size: 13px; }
 
-        /* Buttons */
         .btn-notion {
           background: white; color: black; border: none; padding: 10px 20px;
           border-radius: 99px; font-weight: 700; font-size: 12px;
@@ -105,27 +98,20 @@ export default function ApeOSV2() {
         }
         .btn-notion:hover { transform: scale(1.05); background: #f0f0f0; }
 
-        /* ProgressBar */
         .progress-container { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 10px; }
         .progress-bar { height: 100%; border-radius: 10px; background: var(--accent); }
 
-        /* Badges */
         .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; }
         .badge-green { background: rgba(16, 185, 129, 0.1); color: var(--green); }
       `}</style>
 
-      {/* --- SIDEBAR --- */}
       <aside className="sidebar">
         <div className="logo">
           <Icons.Zap /> Ape Intelligence
         </div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {['Overview', 'Daily Ventures', 'Trading Lab', 'System Settings'].map(tab => (
-            <div 
-              key={tab} 
-              className={`nav-item ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
+            <div key={tab} className={`nav-item ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
               {tab === 'Overview' && <Icons.Target />}
               {tab === 'Daily Ventures' && <Icons.Brain />}
               {tab === 'Trading Lab' && <Icons.Trending />}
@@ -133,9 +119,7 @@ export default function ApeOSV2() {
             </div>
           ))}
         </nav>
-
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-          <div style={{ fontSize: '11px', color: '#444', marginBottom: '10px' }}>USER CONTEXT</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)' }} />
             <div>
@@ -146,7 +130,6 @@ export default function ApeOSV2() {
         </div>
       </aside>
 
-      {/* --- MAIN AREA --- */}
       <main className="viewport">
         <header className="top-bar">
           <div>
@@ -160,8 +143,6 @@ export default function ApeOSV2() {
         </header>
 
         <div className="dashboard-grid">
-          
-          {/* MÓDULO 1: ENTORNO LOCAL (Benicàssim) */}
           <div className="widget" style={{ gridColumn: 'span 3' }}>
             <span className="widget-title">Local Environment</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -177,7 +158,6 @@ export default function ApeOSV2() {
             </div>
           </div>
 
-          {/* MÓDULO 2: TRADING INDICATOR (Trend Signal) */}
           <div className="widget" style={{ gridColumn: 'span 5' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -186,61 +166,40 @@ export default function ApeOSV2() {
               </div>
               <div className="badge badge-green">LIVE FEED</div>
             </div>
-            <div style={{ marginTop: '15px' }} className="text-mute">
-              Confidence Index: <span style={{ color: 'white' }}>92.4%</span> | Risk: <span style={{ color: '#f59e0b' }}>Low</span>
-            </div>
             <div className="progress-container">
               <div className="progress-bar" style={{ width: '92%', background: 'var(--green)' }}></div>
             </div>
           </div>
 
-          {/* MÓDULO 3: DAILY VENTURES (Cash Rápido) */}
           <div className="widget" style={{ gridColumn: 'span 4' }}>
-            <span className="widget-title">Daily Ventures (AI Analysis)</span>
+            <span className="widget-title">Daily Ventures</span>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px', fontSize: '13px', display: 'flex', gap: '10px' }}>
-                <span style={{ color: 'var(--purple)' }}>#1</span> Automatización de Logística Local
-              </li>
-              <li style={{ marginBottom: '12px', fontSize: '13px', display: 'flex', gap: '10px' }}>
-                <span style={{ color: 'var(--purple)' }}>#2</span> Arbitraje de APIs de IA (LatAm)
-              </li>
-              <li style={{ fontSize: '13px', display: 'flex', gap: '10px' }}>
-                <span style={{ color: 'var(--purple)' }}>#3</span> Optimización de Stock Químico
-              </li>
+              <li style={{ marginBottom: '12px', fontSize: '13px' }}><span style={{ color: 'var(--purple)' }}>#1</span> Automatización Logística Local</li>
+              <li style={{ marginBottom: '12px', fontSize: '13px' }}><span style={{ color: 'var(--purple)' }}>#2</span> Arbitraje de APIs IA</li>
+              <li style={{ fontSize: '13px' }}><span style={{ color: 'var(--purple)' }}>#3</span> Optimización Stock Químico</li>
             </ul>
           </div>
 
-          {/* MÓDULO 4: PROYECTOS CRÍTICOS (Control de Proyectos) */}
           <div className="widget" style={{ gridColumn: 'span 8', minHeight: '300px' }}>
             <span className="widget-title">Critical Project Pipeline</span>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '15px 0', fontSize: '12px', color: '#444' }}>PROJECT NAME</th>
-                  <th style={{ padding: '15px 0', fontSize: '12px', color: '#444' }}>STATUS</th>
-                  <th style={{ padding: '15px 0', fontSize: '12px', color: '#444' }}>PROGRESS</th>
+                  <th style={{ padding: '15px 0', fontSize: '12px' }}>PROJECT NAME</th>
+                  <th style={{ padding: '15px 0', fontSize: '12px' }}>STATUS</th>
+                  <th style={{ padding: '15px 0', fontSize: '12px' }}>PROGRESS</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td style={{ padding: '20px 0', fontSize: '14px', fontWeight: 600 }}>ClawBot V2 Core</td>
                   <td><span className="badge badge-green">STABLE</span></td>
-                  <td style={{ width: '200px' }}>
-                    <div className="progress-container"><div className="progress-bar" style={{ width: '85%' }}></div></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '20px 0', fontSize: '14px', fontWeight: 600 }}>Notion Bridge API</td>
-                  <td><span className="badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>ACTIVE</span></td>
-                  <td>
-                    <div className="progress-container"><div className="progress-bar" style={{ width: '60%', background: '#3b82f6' }}></div></div>
-                  </td>
+                  <td><div className="progress-container"><div className="progress-bar" style={{ width: '85%' }}></div></div></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* MÓDULO 5: COMUNICACIÓN DIRECTA (Brain Console) */}
           <div className="widget" style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column' }}>
             <span className="widget-title">Ape Brain Console</span>
             <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '15px', padding: '15px', fontFamily: 'monospace', fontSize: '12px', color: '#10b981' }}>
@@ -249,18 +208,11 @@ export default function ApeOSV2() {
               &gt; Trading Node: Online.<br/>
               &gt; _
             </div>
-            <input 
-              type="text" 
-              placeholder="Send command to AI..." 
-              style={{ 
-                marginTop: '15px', background: 'var(--border)', border: 'none', 
-                padding: '12px 20px', borderRadius: '12px', color: 'white', fontSize: '13px'
-              }} 
-            />
           </div>
-
         </div>
       </main>
     </div>
+  );
+}    </div>
   );
 }
