@@ -1,9 +1,25 @@
 export default function Page() { 
   return (
-    <div className='min-h-screen bg-black text-white flex items-center justify-center'>
-      <h1 className='text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400'>
-        Atomic Dashboard v2.0 Online
-      </h1>
+    <div style={{ 
+      backgroundColor: 'black', 
+      color: '#00d4ff', 
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center', 
+      justifyContent: 'center',
+      fontFamily: 'sans-serif'
+    }}>
+      <h1 style={{ fontSize: '3rem', margin: '0' }}>Atomic Dashboard</h1>
+      <p style={{ color: '#39ff14', fontSize: '1.5rem' }}>Status: Online & Active</p>
+      <div style={{ 
+        marginTop: '20px', 
+        padding: '10px 20px', 
+        border: '1px solid #00d4ff',
+        borderRadius: '8px' 
+      }}>
+        Waiting for Ape's Data...
+      </div>
     </div>
   ) 
 }
