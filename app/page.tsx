@@ -1,50 +1,56 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-// --- ESTILOS INYECTADOS (CSS IN JS) ---
+// --- ESTILOS VISUALES (CSS PURO) ---
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
   
   * { box-sizing: border-box; }
-  body { margin: 0; background-color: #000000; color: #ffffff; font-family: 'Inter', sans-serif; overflow: hidden; }
+  body { margin: 0; background-color: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
   
-  /* Layout Principal */
-  .layout { display: flex; height: 100vh; width: 100vw; }
+  /* Layout Estructural */
+  .layout { display: flex; height: 100vh; width: 100vw; background: #000; }
   
-  /* Sidebar */
+  /* Sidebar Premium */
   .sidebar {
     width: 260px;
     background-color: #050505;
     border-right: 1px solid #1A1A1A;
     display: flex; flex-direction: column;
-    padding: 32px 20px;
+    padding: 30px 20px;
     flex-shrink: 0;
   }
   
-  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; padding-left: 8px; }
-  .brand-text { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #fff; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; }
+  .brand-icon { 
+    width: 36px; height: 36px; 
+    background: linear-gradient(135deg, #2563eb, #7c3aed); 
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+  }
+  .brand-text { font-size: 14px; font-weight: 800; letter-spacing: 0.5px; color: #fff; }
   
   .nav-item {
-    padding: 12px 16px; margin-bottom: 4px;
-    border-radius: 8px; font-size: 14px; font-weight: 500; color: #888;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; margin-bottom: 6px;
+    border-radius: 10px; font-size: 13px; font-weight: 600; color: #666;
+    cursor: pointer; transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 12px;
   }
   .nav-item:hover { background-color: #111; color: #fff; }
-  .nav-item.active { background-color: #1A1A1A; color: #fff; font-weight: 600; }
+  .nav-item.active { background-color: #151515; color: #fff; border: 1px solid #222; }
 
-  /* Contenido Principal */
-  .main { flex: 1; padding: 48px 60px; overflow-y: auto; background: radial-gradient(circle at top right, #111 0%, #000 40%); }
-  
-  .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
-  .page-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin: 0; }
-  .status-badge { 
-    font-size: 11px; font-weight: 700; color: #39FF14; 
-    background: rgba(57, 255, 20, 0.1); padding: 6px 12px; border-radius: 20px;
-    border: 1px solid rgba(57, 255, 20, 0.2);
+  /* Área Principal */
+  .main { 
+    flex: 1; 
+    padding: 50px 60px; 
+    overflow-y: auto; 
+    background: radial-gradient(circle at 80% 0%, #111 0%, #000 60%);
   }
-
-  /* Grid System (3 Columnas Reales) */
+  
+  .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 50px; }
+  .page-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin: 0; }
+  
+  /* GRID ROBUSTO (Evita solapamientos) */
   .grid { 
     display: grid; 
     grid-template-columns: repeat(3, 1fr); 
@@ -54,58 +60,49 @@ const styles = `
   
   /* Tarjetas (Widgets) */
   .card {
-    background-color: #0A0A0A;
-    border: 1px solid #1F1F1F;
+    background-color: #080808;
+    border: 1px solid #1A1A1A;
     border-radius: 20px;
-    padding: 28px;
+    padding: 24px;
     display: flex; flex-direction: column; justify-content: space-between;
-    min-height: 180px;
+    min-height: 160px;
+    position: relative;
+    overflow: hidden; /* CLAVE: Evita que el texto se salga */
     transition: transform 0.2s, border-color 0.2s;
   }
-  .card:hover { border-color: #333; transform: translateY(-2px); }
+  .card:hover { border-color: #333; transform: translateY(-3px); }
   
-  .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
-  .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #555; }
+  .card-label { 
+    font-size: 10px; font-weight: 700; text-transform: uppercase; 
+    letter-spacing: 1.2px; color: #555; margin-bottom: 12px; display: block;
+  }
   
-  .card-value { font-size: 36px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; color: #fff; }
+  /* Tipografía ajustada para no chocar */
+  .card-value { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: #fff; white-space: nowrap; }
   .card-sub { font-size: 13px; color: #666; margin-top: 8px; font-weight: 500; }
   
-  /* Variaciones de Color */
-  .text-green { color: #39FF14; }
+  /* Colores Específicos */
+  .text-neon { color: #39FF14; text-shadow: 0 0 10px rgba(57,255,20,0.3); }
   .text-blue { color: #3B82F6; }
   .text-purple { color: #A855F7; }
 
-  /* Botones */
-  .btn-primary {
-    background: #fff; color: #000; border: none; padding: 12px 24px;
-    border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer;
-    margin-top: 24px;
+  /* Botón Notion */
+  .btn-notion {
+    background: #fff; color: #000; border: none; padding: 12px 20px;
+    border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;
+    margin-top: 20px; width: fit-content;
   }
-  .btn-primary:hover { background: #eee; }
-  
-  /* Chat Input */
-  .terminal-input {
-    width: 100%; background: #111; border: 1px solid #222;
-    padding: 12px; border-radius: 8px; color: #fff; font-family: monospace; font-size: 12px;
-    margin-top: auto;
-  }
+  .btn-notion:hover { background: #e5e5e5; }
 `;
 
-// --- ICONOS SVG (COMPONENTES) ---
+// --- ICONOS SVG (Simple & Tech) ---
 const Icons = {
-  Brain: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
-  ),
-  Bolt: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-  ),
-  Globe: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-  )
+  Bolt: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  Brain: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
 };
 
 export default function MagicOS() {
-  const [activeTab, setActiveTab] = useState('Magic Dashboard');
+  const [activeTab, setActiveTab] = useState('Command Center');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -118,31 +115,27 @@ export default function MagicOS() {
       {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="brand">
-          <div style={{ background: '#111', padding: '6px', borderRadius: '6px', border: '1px solid #222' }}>
-            <Icons.Bolt />
-          </div>
-          <span className="brand-text">APE INTELLIGENCE</span>
+          <div className="brand-icon"><Icons.Bolt /></div>
+          <span className="brand-text" style={{ marginLeft: '12px' }}>APE INTELLIGENCE</span>
         </div>
         
         <nav style={{ flex: 1 }}>
-          {['Magic Dashboard', 'Trading Lab', 'AI Proposals', 'Settings'].map(item => (
+          {['Command Center', 'Trading Lab', 'AI Proposals', 'Settings'].map(item => (
             <div 
               key={item} 
               className={`nav-item ${activeTab === item ? 'active' : ''}`}
               onClick={() => setActiveTab(item)}
             >
-              {activeTab === item && <div style={{ width: '4px', height: '4px', background: '#fff', borderRadius: '50%' }} />}
               {item}
             </div>
           ))}
         </nav>
 
-        {/* User Profile */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', background: '#0A0A0A', borderRadius: '12px', border: '1px solid #1A1A1A' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#222' }} />
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', background: '#0F0F0F', borderRadius: '8px', border: '1px solid #1A1A1A' }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#333', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>DS</div>
           <div>
             <div style={{ fontSize: '12px', fontWeight: '700' }}>Dasotillo</div>
-            <div style={{ fontSize: '10px', color: '#555' }}>PRO PLAN</div>
+            <div style={{ fontSize: '10px', color: '#555' }}>PRO USER</div>
           </div>
         </div>
       </aside>
@@ -151,79 +144,69 @@ export default function MagicOS() {
       <main className="main">
         <header className="header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <span className="status-badge">SYSTEM OPERATIONAL</span>
+            <h1 className="page-title">Magic Dashboard</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+              <div style={{ width: '6px', height: '6px', background: '#39FF14', borderRadius: '50%' }}></div>
+              <span style={{ fontSize: '12px', color: '#666' }}>System Operational • Benicàssim</span>
             </div>
-            <h1 className="page-title">{activeTab}</h1>
           </div>
         </header>
 
-        {activeTab === 'Magic Dashboard' && (
+        {activeTab === 'Command Center' && (
           <div className="grid">
             
-            {/* Widget 1: Trading */}
+            {/* Widget 1: Trading (Sin solapamientos) */}
             <div className="card">
-              <div className="card-header">
-                <span className="card-label">Trend Signal</span>
-                <div style={{ width: '8px', height: '8px', background: '#39FF14', borderRadius: '50%', boxShadow: '0 0 10px #39FF14' }} />
-              </div>
+              <span className="card-label">Trend Signal V1</span>
               <div>
-                <div className="card-value text-green">LONG</div>
+                <div className="card-value text-neon">LONG_ENTRY</div>
                 <div className="card-sub">Confidence: 94%</div>
               </div>
             </div>
 
             {/* Widget 2: Environment */}
             <div className="card">
-              <div className="card-header">
-                <span className="card-label">Environment</span>
-                <Icons.Globe />
-              </div>
+              <span className="card-label text-blue">Environment</span>
               <div>
                 <div className="card-value">17°C</div>
-                <div className="card-sub">Benicàssim • Wind 10km/h</div>
+                <div className="card-sub">Wind: 10km/h SE</div>
               </div>
             </div>
 
-            {/* Widget 3: News Feed */}
+            {/* Widget 3: Cash Flow */}
             <div className="card">
-              <div className="card-header">
-                <span className="card-label">Financial Feed</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ fontSize: '13px', borderBottom: '1px solid #222', paddingBottom: '8px' }}>
-                  BTC Testing <span className="text-green">$102k</span>
-                </div>
-                <div style={{ fontSize: '13px' }}>
-                  AI Sector: <span className="text-purple">Strong Buy</span>
-                </div>
+              <span className="card-label text-purple">Daily Profit</span>
+              <div>
+                <div className="card-value">+$2.50</div>
+                <div className="card-sub">Target: $50.00</div>
               </div>
             </div>
 
-            {/* Widget 4: AI STRATEGY (Double Width) */}
-            <div className="card" style={{ gridColumn: 'span 2', background: 'linear-gradient(145deg, #0f0f0f, #050505)' }}>
-              <div className="card-header">
-                <span className="card-label text-purple">Gemini Strategy Engine</span>
-                <Icons.Brain />
+            {/* Widget 4: AI STRATEGY (Estilo Captura 14.41.57 mejorado) */}
+            <div className="card" style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #1e1e2e, #13131a)', border: '1px solid #2d2d3d' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                     <span className="text-purple"><Icons.Brain /></span>
+                     <span className="card-label" style={{ marginBottom: 0, color: '#A855F7' }}>GEMINI BUSINESS PROPOSAL</span>
+                  </div>
+                  <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 10px 0' }}>Micro-SaaS Logístico</h3>
+                  <p style={{ color: '#999', fontSize: '14px', lineHeight: '1.5', maxWidth: '500px', margin: 0 }}>
+                    Analizando ineficiencias en el sector químico regional para Benicàssim. Propuesta lista para revisión.
+                  </p>
+                </div>
               </div>
-              <div style={{ paddingRight: '40px' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 10px 0' }}>Oportunidad: Automatización Logística</h3>
-                <p style={{ color: '#888', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-                  Detectada alta demanda en Benicàssim para sistemas de gestión de stock en tiempo real. Propuesta lista para revisión.
-                </p>
-                <button className="btn-primary">SYNC TO NOTION</button>
-              </div>
+              <button className="btn-notion">SYNC TO NOTION</button>
             </div>
 
             {/* Widget 5: Terminal */}
             <div className="card">
-              <div className="card-header">
-                <span className="card-label">Ape Terminal</span>
+              <span className="card-label">Ape Terminal</span>
+              <div style={{ flex: 1, color: '#444', fontFamily: 'monospace', fontSize: '12px', paddingTop: '10px' }}>
+                > System initialized...<br/>
+                > Monitoring active.<br/>
+                <span className="text-neon">>_</span>
               </div>
-              <div style={{ fontSize: '12px', color: '#444', marginBottom: '10px' }}>
-                [System]: Waiting for input...
-              </div>
-              <input type="text" className="terminal-input" placeholder="Type command..." />
             </div>
 
           </div>
