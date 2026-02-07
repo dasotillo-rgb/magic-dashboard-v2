@@ -1,658 +1,409 @@
-"use client";
-
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  MessageSquare, 
-  Briefcase, 
-  Settings, 
-  Zap, 
-  Menu, 
-  X, 
-  Search, 
-  Bell, 
-  ExternalLink, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Cpu, 
-  Eye, 
-  EyeOff, 
-  Globe,
-  Send,
-  Loader2,
-  CloudSun
+  LayoutGrid, TrendingUp, Brain, Briefcase, Settings, 
+  Zap, Cloud, ArrowUpRight, ArrowDownRight, 
+  MessageSquare, Send, CheckCircle, Clock, Globe,
+  Menu, X, Eye, EyeOff, Search, Bell, Terminal, Wallet, MapPin
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// --- CONFIGURACIÓN DE APIS ---
+// --- CONFIGURACIÓN CEREBRO ---
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
-export default function ApeOSV4() {
-  // --- ESTADOS GLOBALES ---
-  const [activeTab, setActiveTab] = useState('overview');
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [privacyMode, setPrivacyMode] = useState(false);
-  const [language, setLanguage] = useState('en');
+export default function ApeOSV5() {
+  // Estado Visual (El diseño que te gusta)
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [showBalance, setShowBalance] = useState(true);
   
-  // --- ESTADOS DE DATOS ---
-  const [cryptoData, setCryptoData] = useState<any>(null);
-  const [weather, setWeather] = useState<any>(null);
-  const [chatMessages, setChatMessages] = useState<{role: string, text: string}[]>([]);
-  const [userInput, setUserInput] = useState("");
+  // Estado de Datos (La lógica real V4)
+  const [prices, setPrices] = useState<any>({ bitcoin: { usd: 0, usd_24h_change: 0 } });
+  const [weather, setWeather] = useState({ temp: '--', condition: 'Scanning...' });
+  const [chatInput, setChatInput] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    { role: 'model', text: 'ApeOS Systems Online. Conectado a Gemini Pro. ¿Cuál es el siguiente movimiento, Comandante?' }
+  ]);
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // --- FETCHING DE DATOS REALES ---
+  // --- MOTOR DE DATOS REALES ---
   useEffect(() => {
-    const fetchMarketData = async () => {
+    // 1. Precios Crypto (CoinGecko)
+    const fetchPrices = async () => {
       try {
         const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true');
         const data = await res.json();
-        setCryptoData(data);
-      } catch (e) { console.error("Error fetching crypto", e); }
+        setPrices(data);
+      } catch (e) { console.error("Crypto Error", e); }
     };
-
+    
+    // 2. Clima (Open-Meteo)
     const fetchWeather = async () => {
-      try {
-        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=40.41&longitude=-3.70&current_weather=true');
-        const data = await res.json();
-        setWeather(data.current_weather);
-      } catch (e) { console.error("Error fetching weather", e); }
+       if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          try {
+            const { latitude, longitude } = pos.coords;
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+            const data = await res.json();
+            setWeather({ temp: `${data.current_weather.temperature}°C`, condition: 'Local Base' });
+          } catch (e) { setWeather({ temp: 'Error', condition: 'Offline' }); }
+        });
+      }
     };
 
-    fetchMarketData();
+    fetchPrices();
     fetchWeather();
-    const interval = setInterval(fetchMarketData, 30000); // Refrescar cada 30s
+    const interval = setInterval(fetchPrices, 60000); 
     return () => clearInterval(interval);
   }, []);
 
+  // Scroll automático al chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+  }, [chatHistory]);
 
-  // --- LÓGICA DE CHAT (GEMINI) ---
-  const handleSendMessage = async () => {
-    if (!userInput.trim()) return;
-    const userMsg = { role: 'user', text: userInput };
-    setChatMessages(prev => [...prev, userMsg]);
-    setUserInput("");
+  // --- LÓGICA CHAT GEMINI ---
+  const handleChatSend = async () => {
+    if (!chatInput.trim()) return;
+    const userMsg = chatInput;
+    setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
+    setChatInput('');
     setIsTyping(true);
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const result = await model.generateContent(userInput);
+      const result = await model.generateContent(userMsg);
       const response = await result.response;
-      setChatMessages(prev => [...prev, { role: 'bot', text: response.text() }]);
+      const text = response.text();
+      setChatHistory(prev => [...prev, { role: 'model', text: text }]);
     } catch (error) {
-      setChatMessages(prev => [...prev, { role: 'bot', text: "Error connecting to ApeBrain. Check API Key." }]);
+      setChatHistory(prev => [...prev, { role: 'model', text: "Error de conexión neuronal. Verifica la API Key." }]);
     } finally {
       setIsTyping(false);
     }
   };
 
-  // --- MÁSCARA DE PRIVACIDAD ---
-  const mask = (val: string) => privacyMode ? "••••••" : val;
-
-  // --- COMPONENTES DE VISTA ---
-  const SidebarItem = ({ id, icon: Icon, label }: any) => (
-    <button 
-      onClick={() => { setActiveTab(id); setIsMobileMenuOpen(false); }}
-      className={`sidebar-item ${activeTab === id ? 'active' : ''}`}
-    >
-      <Icon size={22} />
-      {isSidebarExpanded && <span className="ml-4 font-medium">{label}</span>}
-    </button>
-  );
-
   return (
-    <div className="ape-container">
-      {/* SIDEBAR */}
-      <aside className={`sidebar ${isSidebarExpanded ? 'expanded' : 'collapsed'} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-header">
-          <div className="logo-container">
-            <Zap className="text-yellow-400 fill-yellow-400" size={28} />
-            {isSidebarExpanded && <span className="brand-text">APE <span className="text-white/50">Intelligence</span></span>}
-          </div>
-          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="collapse-btn">
-            {isSidebarExpanded ? <X size={18} /> : <Menu size={18} />}
-          </button>
+    <div className="layout">
+      {/* --- ESTILOS VISUALES V3 (GLASSMORPHISM & DARK) --- */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@300;400;500;600;800&display=swap');
+        
+        :root {
+          --bg: #030303;
+          --glass: rgba(20, 20, 20, 0.6);
+          --glass-high: rgba(30, 30, 30, 0.8);
+          --border: rgba(255, 255, 255, 0.08);
+          --neon-green: #10b981;
+          --neon-purple: #8b5cf6;
+          --neon-blue: #3b82f6;
+          --neon-orange: #f59e0b;
+          --text: #ffffff;
+          --text-muted: #888;
+        }
+
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        .layout { display: flex; height: 100vh; background: radial-gradient(circle at 15% 15%, #111 0%, #000 100%); position: relative; }
+        
+        /* SIDEBAR INTELIGENTE (COLAPSABLE) */
+        .sidebar { 
+          width: 80px; border-right: 1px solid var(--border); display: flex; flex-direction: column; 
+          padding: 30px 0; gap: 15px; z-index: 50; background: rgba(0,0,0,0.5); backdrop-filter: blur(20px);
+          transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .sidebar:hover { width: 260px; align-items: flex-start; padding-left: 20px; }
+        
+        .brand { display: flex; align-items: center; justify-content: center; height: 50px; margin-bottom: 20px; width: 100%; overflow: hidden; }
+        .sidebar:hover .brand { justify-content: flex-start; }
+        .brand-text { display: none; margin-left: 12px; font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px; color: white; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
+        .sidebar:hover .brand-text { display: block; opacity: 1; }
+
+        .nav-btn {
+          height: 50px; width: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s; position: relative; margin: 0 auto;
+        }
+        .sidebar:hover .nav-btn { width: 90%; justify-content: flex-start; padding-left: 15px; margin: 0; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.08); color: white; }
+        .nav-btn.active { color: var(--neon-blue); }
+        .nav-btn.active::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 3px; background: var(--neon-blue); border-radius: 0 4px 4px 0; }
+        
+        .nav-label { display: none; margin-left: 15px; font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .sidebar:hover .nav-label { display: block; animation: fadeIn 0.4s ease; }
+
+        /* AREA PRINCIPAL */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .header { height: 80px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+        .page-title { font-family: 'Space Grotesk'; font-size: 32px; font-weight: 700; letter-spacing: -1px; margin: 0; }
+        
+        .content-area { flex: 1; overflow-y: auto; padding: 0 40px 40px 40px; }
+        
+        /* GRID SYSTEM (EL BUENO) */
+        .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; padding-bottom: 60px; grid-auto-rows: minmax(160px, auto); }
+        
+        .card {
+          background: var(--glass); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
+          backdrop-filter: blur(40px); display: flex; flex-direction: column; transition: transform 0.3s, border-color 0.3s;
+          position: relative; overflow: hidden;
+        }
+        .card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); }
+        
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+
+        /* CLASES DE COLOR SUTIL */
+        .w-trading { border-top: 1px solid rgba(16, 185, 129, 0.3); background: linear-gradient(180deg, rgba(16,185,129,0.03) 0%, rgba(0,0,0,0) 100%), var(--glass); }
+        .w-brain { border-top: 1px solid rgba(139, 92, 246, 0.3); background: linear-gradient(180deg, rgba(139,92,246,0.03) 0%, rgba(0,0,0,0) 100%), var(--glass); }
+        .w-projects { border-top: 1px solid rgba(245, 158, 11, 0.3); }
+        
+        /* ELEMENTOS */
+        .stat-val { font-family: 'Space Grotesk'; font-size: 36px; font-weight: 700; color: white; letter-spacing: -1px; }
+        .pill { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; }
+        .pill-green { background: rgba(16, 185, 129, 0.15); color: var(--neon-green); }
+        .pill-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        /* CHAT */
+        .chat-window { flex: 1; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
+        .msg { padding: 12px 18px; border-radius: 16px; font-size: 14px; max-width: 80%; line-height: 1.5; }
+        .msg.model { background: rgba(139, 92, 246, 0.1); color: #e9d5ff; border: 1px solid rgba(139, 92, 246, 0.2); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg.user { background: rgba(255, 255, 255, 0.1); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .input-area { display: flex; gap: 10px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-family: 'Inter'; }
+
+        /* BRANDING */
+        .watermark { position: fixed; bottom: 20px; right: 20px; font-size: 10px; font-weight: 800; opacity: 0.3; letter-spacing: 2px; pointer-events: none; z-index: 0; }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) { 
+          .grid { grid-template-columns: repeat(2, 1fr); } 
+          .sidebar { display: none; } /* En móvil haremos otra cosa luego */
+          .layout { flex-direction: column; }
+          .header { padding: 20px; }
+          .content-area { padding: 20px; }
+        }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
+
+      {/* --- SIDEBAR V3 (LA BUENA) --- */}
+      <nav className="sidebar">
+        <div className="brand">
+          <Zap size={24} className="text-yellow-500 fill-yellow-500" style={{minWidth: '50px', display:'flex', justifyContent:'center'}} />
+          <span className="brand-text">APE Intelligence</span>
         </div>
 
-        <nav className="sidebar-nav">
-          <SidebarItem id="overview" icon={LayoutDashboard} label={language === 'en' ? 'Overview' : 'Resumen'} />
-          <SidebarItem id="trading" icon={TrendingUp} label="Trading Lab" />
-          <SidebarItem id="chat" icon={MessageSquare} label="Brain Chat" />
-          <SidebarItem id="projects" icon={Briefcase} label={language === 'en' ? 'Projects' : 'Proyectos'} />
-          <SidebarItem id="settings" icon={Settings} label={language === 'en' ? 'Settings' : 'Ajustes'} />
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="user-badge">
-            <div className="avatar">AD</div>
-            {isSidebarExpanded && <div className="user-info"><span>Lead Dev</span><small>Online</small></div>}
+        {[
+          { id: 'Overview', icon: LayoutGrid },
+          { id: 'Trading Lab', icon: TrendingUp },
+          { id: 'Brain Chat', icon: Brain },
+          { id: 'Projects', icon: Briefcase },
+          { id: 'Settings', icon: Settings },
+        ].map(item => (
+          <div key={item.id} className={`nav-btn ${activeTab === item.id ? 'active' : ''}`} onClick={() => setActiveTab(item.id)}>
+            <item.icon size={20} />
+            <span className="nav-label">{item.id}</span>
           </div>
+        ))}
+
+        <div style={{marginTop: 'auto', display: 'flex', justifyContent: 'center'}}>
+          <div style={{width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)'}}></div>
         </div>
-      </aside>
+      </nav>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <main className="main-content">
-        {/* TOP BAR */}
-        <header className="top-bar">
-          <div className="search-bar">
-            <Search size={18} className="text-gray-400" />
-            <input type="text" placeholder="Search systems..." />
+      {/* --- MAIN CONTENT --- */}
+      <main className="main">
+        <header className="header">
+          <div>
+            <h1 className="page-title">{activeTab}</h1>
+            <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'5px'}}>
+               <span style={{fontSize: '12px', color: '#666'}}>System Operational</span>
+               <div style={{width:'6px', height:'6px', borderRadius:'50%', background: '#10b981'}}></div>
+            </div>
           </div>
-          <div className="top-actions">
-            {weather && (
-              <div className="weather-widget">
-                <CloudSun size={18} className="text-blue-400" />
-                <span>{weather.temperature}°C</span>
-              </div>
-            )}
-            <div className="notifications"><Bell size={20} /> <span className="dot"></span></div>
+          <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+            <div className="nav-btn" style={{width:'auto', padding:'0 15px', gap:'10px', background:'rgba(255,255,255,0.05)'}}>
+               <Cloud size={16} /> {weather.temp}
+            </div>
           </div>
         </header>
 
-        {/* CONTENIDO DINÁMICO */}
-        <section className="view-container">
-          {activeTab === 'overview' && (
-            <div className="fade-in">
-              <h1 className="view-title">Command Center</h1>
-              <div className="grid-overview">
-                <div className="widget card-gradient-blue">
-                  <div className="widget-header"><span>Total Value</span><Cpu size={16} /></div>
-                  <div className="widget-value">{mask("$128,430.22")}</div>
-                  <div className="widget-footer text-green-400">+12.5% <ArrowUpRight size={14} /></div>
-                </div>
-                <div className="widget card-gradient-purple">
-                  <div className="widget-header"><span>Active Nodes</span><Globe size={16} /></div>
-                  <div className="widget-value">42</div>
-                  <div className="widget-footer text-blue-300">Global Syncing</div>
-                </div>
-                {/* News Widget Integrado */}
-                <div className="widget card-dark col-span-2">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Live Transmission</h3>
-                  <div className="news-feed">
-                    <div className="news-item">
-                      <span className="news-tag">URGENT</span>
-                      <p>Bitcoin ETFs see record inflows in Tokyo sessions.</p>
+        <div className="content-area">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeTab} 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -10 }}
+              className="grid"
+            >
+              
+              {/* --- OVERVIEW TAB (DISEÑO GRID V3) --- */}
+              {activeTab === 'Overview' && (
+                <>
+                  {/* WIDGET 1: CAPITAL (Con Ojo de Privacidad) */}
+                  <div className="card w-trading" style={{ gridColumn: 'span 4' }}>
+                    <div className="card-head">
+                      <span className="card-label"><Wallet size={14} /> TOTAL ASSETS</span>
+                      <button onClick={() => setShowBalance(!showBalance)} style={{background:'none', border:'none', color:'#666', cursor:'pointer'}}>
+                        {showBalance ? <Eye size={16}/> : <EyeOff size={16}/>}
+                      </button>
                     </div>
-                    <div className="news-item">
-                      <span className="news-tag blue">TECH</span>
-                      <p>Gemini 1.5 Pro integration complete in ApeOS V4 core.</p>
+                    <div className="stat-val">{showBalance ? '$128,430.22' : '****'}</div>
+                    <div style={{marginTop: 'auto', display: 'flex', justifyContent:'space-between', alignItems:'center'}}>
+                       <span style={{fontSize:'12px', color:'#10b981'}}>+12.5% this month</span>
+                       <TrendingUp size={16} color="#10b981" />
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'trading' && (
-            <div className="fade-in">
-              <h1 className="view-title">Trading Lab</h1>
-              <div className="crypto-grid">
-                {cryptoData ? Object.keys(cryptoData).map(coin => (
-                  <div key={coin} className="crypto-card">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="uppercase font-bold text-lg">{coin}</span>
-                      <span className={cryptoData[coin].usd_24h_change >= 0 ? 'text-green-400' : 'text-red-400'}>
-                        {cryptoData[coin].usd_24h_change.toFixed(2)}%
-                      </span>
+                  {/* WIDGET 2: TRADING SIGNAL (Diseño limpio) */}
+                  <div className="card w-trading" style={{ gridColumn: 'span 4' }}>
+                    <div className="card-head">
+                      <span className="card-label" style={{color:'#10b981'}}><Zap size={14} /> TREND SIGNAL</span>
+                      <span className="pill pill-green">LIVE</span>
                     </div>
-                    <div className="text-2xl font-mono mb-6">${mask(cryptoData[coin].usd.toLocaleString())}</div>
-                    <button 
-                      onClick={() => console.log(`Iniciando orden para ${coin}`)}
-                      className="buy-btn"
-                    >
-                      Execute Swap
-                    </button>
+                    <div>
+                      <div style={{fontSize: '12px', color:'#888', marginBottom:'4px'}}>BTC/USDT Strategy</div>
+                      <div style={{fontSize: '32px', fontWeight: 800, color: '#10b981', letterSpacing: '-1px'}}>STRONG BUY</div>
+                    </div>
+                    <div style={{height:'4px', width:'100%', background:'#111', borderRadius:'2px', marginTop:'15px', overflow:'hidden'}}>
+                      <div style={{height:'100%', width:'85%', background:'#10b981'}}></div>
+                    </div>
                   </div>
-                )) : <Loader2 className="animate-spin" />}
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'chat' && (
-            <div className="chat-container">
-              <div className="chat-messages">
-                {chatMessages.length === 0 && (
-                  <div className="chat-welcome">
-                    <Zap size={40} className="text-yellow-500 mb-4" />
-                    <h2>ApeBrain Assistant</h2>
-                    <p>Ready to process your commands. How can I assist today?</p>
+                  {/* WIDGET 3: CLIMA / DAILY (Recomendación) */}
+                  <div className="card w-projects" style={{ gridColumn: 'span 4' }}>
+                    <div className="card-head">
+                      <span className="card-label" style={{color:'#f59e0b'}}><MapPin size={14} /> LOCATION INTEL</span>
+                    </div>
+                    <div style={{textAlign:'center', padding:'10px'}}>
+                      <div style={{fontSize:'13px', color:'#aaa', fontStyle:'italic'}}>
+                        "{weather.temp} en Base. Condiciones óptimas para trabajo profundo."
+                      </div>
+                    </div>
                   </div>
-                )}
-                {chatMessages.map((msg, i) => (
-                  <div key={i} className={`message-bubble ${msg.role}`}>
-                    {msg.text}
-                  </div>
-                ))}
-                {isTyping && <div className="message-bubble bot animate-pulse">Thinking...</div>}
-                <div ref={chatEndRef} />
-              </div>
-              <div className="chat-input-area">
-                <input 
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask ApeBrain..."
-                />
-                <button onClick={handleSendMessage}><Send size={20} /></button>
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'projects' && (
-            <div className="fade-in grid md:grid-cols-2 gap-6">
-              <div className="project-column">
-                <h3 className="section-subtitle">Active Builds</h3>
-                <div className="project-card">
-                  <div className="flex justify-between mb-2"><span>Neural Bridge</span><span>85%</span></div>
-                  <div className="progress-bar"><div className="progress-fill" style={{width: '85%'}}></div></div>
-                </div>
-                <div className="project-card">
-                  <div className="flex justify-between mb-2"><span>DeFi Aggregator</span><span>40%</span></div>
-                  <div className="progress-bar"><div className="progress-fill" style={{width: '40%'}}></div></div>
-                </div>
-              </div>
-              <div className="project-column">
-                <h3 className="section-subtitle">Viable / Backlog</h3>
-                <ul className="backlog-list">
-                  <li><span>•</span> Auto-Tax Harvester</li>
-                  <li><span>•</span> DAO Voting Mobile App</li>
-                  <li><span>•</span> Multi-chain Indexer</li>
-                </ul>
-              </div>
-            </div>
-          )}
+                  {/* WIDGET 4: BRAIN CONSOLE (Mini Chat) */}
+                  <div className="card w-brain" style={{ gridColumn: 'span 8', minHeight: '300px' }}>
+                    <div className="card-head">
+                      <span className="card-label" style={{color:'#8b5cf6'}}><Terminal size={14} /> APE CONSOLE</span>
+                    </div>
+                    <div style={{flex:1, background:'rgba(0,0,0,0.3)', borderRadius:'12px', padding:'15px', fontFamily:'monospace', fontSize:'13px', color:'#10b981', overflow:'hidden', display:'flex', flexDirection:'column-reverse'}}>
+                      {chatHistory.slice(-3).reverse().map((m, i) => (
+                        <div key={i} style={{marginBottom:'8px', opacity: 1 - (i*0.3)}}>
+                           <span style={{color: m.role === 'user' ? 'white' : '#8b5cf6'}}>{m.role === 'user' ? '>' : '#'}</span> {m.text}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-          {activeTab === 'settings' && (
-            <div className="fade-in max-w-xl">
-              <h1 className="view-title">System Settings</h1>
-              <div className="settings-stack">
-                <div className="setting-row">
-                  <div>
-                    <label className="block font-bold">Language / Idioma</label>
-                    <small className="text-gray-400">Set your preferred UI language.</small>
+                  {/* WIDGET 5: CRYPTO TICKER REAL */}
+                  <div className="card" style={{ gridColumn: 'span 4' }}>
+                     <div className="card-head"><span className="card-label">MARKET PULSE</span></div>
+                     <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+                        {['bitcoin', 'ethereum', 'solana'].map(c => (
+                          <div key={c} style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                             <div style={{display:'flex', alignItems:'center', gap:'10px', textTransform:'capitalize'}}>
+                                <div style={{width:'8px', height:'8px', borderRadius:'50%', background: prices[c]?.usd_24h_change >= 0 ? '#10b981' : '#ef4444'}}></div>
+                                {c}
+                             </div>
+                             <div style={{fontWeight:600}}>${prices[c]?.usd?.toLocaleString()}</div>
+                          </div>
+                        ))}
+                     </div>
                   </div>
-                  <select 
-                    value={language} 
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="settings-input"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                  </select>
-                </div>
-                <div className="setting-row">
-                  <div>
-                    <label className="block font-bold">Privacy Mode</label>
-                    <small className="text-gray-400">Mask sensitive financial balances.</small>
-                  </div>
-                  <button 
-                    onClick={() => setPrivacyMode(!privacyMode)}
-                    className={`toggle-btn ${privacyMode ? 'active' : ''}`}
-                  >
-                    {privacyMode ? <EyeOff size={18} /> : <Eye size={18} />}
-                    {privacyMode ? 'Hidden' : 'Visible'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
+                </>
+              )}
+
+              {/* --- BRAIN CHAT TAB (FULL SCREEN CHAT) --- */}
+              {activeTab === 'Brain Chat' && (
+                 <div className="card w-brain" style={{ gridColumn: 'span 12', height: '100%', minHeight: '500px' }}>
+                    <div className="card-head">
+                       <span className="card-label" style={{color:'#8b5cf6'}}>NEURAL INTERFACE</span>
+                       <span className="pill" style={{background:'rgba(139, 92, 246, 0.1)', color:'#8b5cf6'}}>GEMINI PRO CONNECTED</span>
+                    </div>
+                    <div className="chat-window">
+                       {chatHistory.map((msg, i) => (
+                          <div key={i} className={`msg ${msg.role}`}>
+                             {msg.text}
+                          </div>
+                       ))}
+                       {isTyping && <div className="msg model" style={{opacity:0.5}}>Analizando...</div>}
+                       <div ref={chatEndRef}></div>
+                    </div>
+                    <div className="input-area">
+                       <input 
+                          className="chat-input" 
+                          placeholder="Envía una orden al sistema..." 
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleChatSend()}
+                       />
+                       <button onClick={handleChatSend} style={{background:'#8b5cf6', border:'none', borderRadius:'8px', width:'40px', color:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                          <Send size={18} />
+                       </button>
+                    </div>
+                 </div>
+              )}
+              
+              {/* --- TRADING LAB TAB (PIONEX) --- */}
+              {activeTab === 'Trading Lab' && (
+                 <div className="card w-trading" style={{ gridColumn: 'span 12', minHeight:'500px' }}>
+                    <div className="card-head">
+                       <span className="card-label" style={{color:'#10b981'}}>ACTIVE TRADING DESK</span>
+                       <span className="pill pill-green">API LINKED</span>
+                    </div>
+                    <div style={{flex:1, display:'flex', alignItems:'center', justifyContent:'center', border:'1px dashed #333', borderRadius:'12px', background:'rgba(0,0,0,0.2)'}}>
+                       <div style={{textAlign:'center'}}>
+                          <h2 style={{fontSize:'40px', margin:'0 0 20px 0'}}>BTC/USDT</h2>
+                          <div style={{fontSize:'60px', fontWeight:800, color:'white'}}>${prices.bitcoin?.usd?.toLocaleString()}</div>
+                          <div style={{display:'flex', gap:'20px', justifyContent:'center', marginTop:'40px'}}>
+                             <button style={{padding:'15px 40px', background:'#10b981', border:'none', borderRadius:'12px', fontSize:'18px', fontWeight:700, cursor:'pointer'}}>BUY LONG</button>
+                             <button style={{padding:'15px 40px', background:'#ef4444', border:'none', borderRadius:'12px', fontSize:'18px', fontWeight:700, color:'white', cursor:'pointer'}}>SELL SHORT</button>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              )}
+
+              {/* --- PROJECTS TAB --- */}
+              {activeTab === 'Projects' && (
+                <>
+                 <div className="card w-projects" style={{ gridColumn: 'span 6', minHeight:'400px' }}>
+                    <div className="card-head"><span className="card-label">ACTIVE BUILDS</span></div>
+                    <div style={{display:'flex', flexDirection:'column', gap:'25px', marginTop:'20px'}}>
+                       <div>
+                          <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'13px'}}>
+                             <span>ApeOS V5 (Optimization)</span> <span style={{color:'#f59e0b'}}>90%</span>
+                          </div>
+                          <div style={{height:'6px', background:'#222', borderRadius:'3px'}}><div style={{width:'90%', background:'#f59e0b', height:'100%', borderRadius:'3px'}}></div></div>
+                       </div>
+                       <div>
+                          <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'13px'}}>
+                             <span>ClawBot Telegram</span> <span style={{color:'#f59e0b'}}>45%</span>
+                          </div>
+                          <div style={{height:'6px', background:'#222', borderRadius:'3px'}}><div style={{width:'45%', background:'#f59e0b', height:'100%', borderRadius:'3px'}}></div></div>
+                       </div>
+                    </div>
+                 </div>
+                 <div className="card" style={{ gridColumn: 'span 6' }}>
+                    <div className="card-head"><span className="card-label">VIABLE BACKLOG</span></div>
+                    <ul style={{listStyle:'none', padding:0, margin:0, fontSize:'14px', color:'#ccc', display:'flex', flexDirection:'column', gap:'15px'}}>
+                       <li style={{display:'flex', alignItems:'center', gap:'10px'}}><div style={{width:'6px', height:'6px', borderRadius:'50%', border:'1px solid #666'}}></div> SaaS de Impuestos Automáticos</li>
+                       <li style={{display:'flex', alignItems:'center', gap:'10px'}}><div style={{width:'6px', height:'6px', borderRadius:'50%', border:'1px solid #666'}}></div> App de Votación DAO</li>
+                       <li style={{display:'flex', alignItems:'center', gap:'10px'}}><div style={{width:'6px', height:'6px', borderRadius:'50%', border:'1px solid #666'}}></div> Trading Bot Arbitraje</li>
+                    </ul>
+                 </div>
+                </>
+              )}
+
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
 
-      {/* WATERMARK */}
-      <div className="magic-watermark">Magic Dashboard</div>
-
-      {/* STYLED JSX */}
-      <style jsx global>{`
-        :root {
-          --bg: #0a0a0c;
-          --sidebar: #111114;
-          --accent: #3b82f6;
-          --card: #16161a;
-          --text: #ffffff;
-        }
-
-        body {
-          background: var(--bg);
-          color: var(--text);
-          margin: 0;
-          font-family: 'Inter', sans-serif;
-          overflow-x: hidden;
-        }
-
-        .ape-container {
-          display: flex;
-          height: 100vh;
-          width: 100vw;
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-          background: var(--sidebar);
-          border-right: 1px solid #222;
-          display: flex;
-          flex-direction: column;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          z-index: 100;
-        }
-
-        .sidebar.expanded { width: 260px; }
-        .sidebar.collapsed { width: 80px; }
-
-        .sidebar-header {
-          padding: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .logo-container {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-weight: 800;
-          letter-spacing: -0.5px;
-          font-size: 1.2rem;
-        }
-
-        .sidebar-nav {
-          flex: 1;
-          padding: 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .sidebar-item {
-          display: flex;
-          align-items: center;
-          padding: 12px;
-          border-radius: 12px;
-          color: #888;
-          transition: 0.2s;
-          cursor: pointer;
-          border: none;
-          background: transparent;
-          width: 100%;
-          text-align: left;
-        }
-
-        .sidebar-item:hover, .sidebar-item.active {
-          background: #1e1e24;
-          color: #fff;
-        }
-
-        .sidebar-item.active {
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          border-left: 3px solid var(--accent);
-        }
-
-        /* Main Content */
-        .main-content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          overflow-y: auto;
-          position: relative;
-        }
-
-        .top-bar {
-          height: 70px;
-          padding: 0 40px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 1px solid #1a1a1e;
-          position: sticky;
-          top: 0;
-          background: rgba(10, 10, 12, 0.8);
-          backdrop-filter: blur(10px);
-          z-index: 50;
-        }
-
-        .search-bar {
-          background: #16161a;
-          padding: 8px 16px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          width: 300px;
-        }
-
-        .search-bar input {
-          background: transparent;
-          border: none;
-          color: white;
-          outline: none;
-          width: 100%;
-        }
-
-        .view-container {
-          padding: 40px;
-          max-width: 1200px;
-          width: 100%;
-          margin: 0 auto;
-        }
-
-        /* Widgets */
-        .grid-overview {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 20px;
-        }
-
-        .widget {
-          padding: 24px;
-          border-radius: 20px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          min-height: 160px;
-        }
-
-        .card-gradient-blue { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }
-        .card-gradient-purple { background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%); }
-        .card-dark { background: #16161a; border: 1px solid #222; }
-
-        .widget-value {
-          font-size: 1.8rem;
-          font-weight: 700;
-          margin: 10px 0;
-        }
-
-        /* Trading Lab */
-        .crypto-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 20px;
-        }
-
-        .crypto-card {
-          background: #16161a;
-          border: 1px solid #222;
-          padding: 24px;
-          border-radius: 20px;
-          transition: 0.3s;
-        }
-
-        .crypto-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-
-        .buy-btn {
-          width: 100%;
-          padding: 12px;
-          border-radius: 10px;
-          background: var(--accent);
-          border: none;
-          color: white;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        /* Brain Chat */
-        .chat-container {
-          height: calc(100vh - 200px);
-          display: flex;
-          flex-direction: column;
-          background: #111114;
-          border-radius: 24px;
-          overflow: hidden;
-          border: 1px solid #222;
-        }
-
-        .chat-messages {
-          flex: 1;
-          overflow-y: auto;
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .message-bubble {
-          max-width: 80%;
-          padding: 14px 20px;
-          border-radius: 18px;
-          line-height: 1.5;
-        }
-
-        .message-bubble.user {
-          align-self: flex-end;
-          background: var(--accent);
-          color: white;
-          border-bottom-right-radius: 4px;
-        }
-
-        .message-bubble.bot {
-          align-self: flex-start;
-          background: #222;
-          color: #eee;
-          border-bottom-left-radius: 4px;
-        }
-
-        .chat-input-area {
-          padding: 20px;
-          background: #16161a;
-          display: flex;
-          gap: 12px;
-        }
-
-        .chat-input-area input {
-          flex: 1;
-          background: #0a0a0c;
-          border: 1px solid #333;
-          border-radius: 12px;
-          padding: 12px 20px;
-          color: white;
-          outline: none;
-        }
-
-        /* Projects */
-        .project-card {
-          background: #16161a;
-          padding: 20px;
-          border-radius: 15px;
-          margin-bottom: 15px;
-        }
-
-        .progress-bar {
-          height: 8px;
-          background: #222;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-
-        .progress-fill {
-          height: 100%;
-          background: var(--accent);
-          transition: width 1s ease-in-out;
-        }
-
-        /* Settings */
-        .setting-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 20px;
-          background: #16161a;
-          border-radius: 16px;
-          margin-bottom: 12px;
-        }
-
-        .settings-input {
-          background: #0a0a0c;
-          border: 1px solid #333;
-          color: white;
-          padding: 8px 12px;
-          border-radius: 8px;
-        }
-
-        .toggle-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 10px;
-          border: 1px solid #333;
-          background: #0a0a0c;
-          color: white;
-          cursor: pointer;
-        }
-
-        .toggle-btn.active { background: #3b82f622; border-color: var(--accent); }
-
-        /* Branding & Mobile */
-        .magic-watermark {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          font-size: 10px;
-          text-transform: uppercase;
-          letter-spacing: 2px;
-          color: rgba(255,255,255,0.05);
-          pointer-events: none;
-          z-index: 1000;
-        }
-
-        .top-actions { display: flex; align-items: center; gap: 20px; }
-        .weather-widget { display: flex; align-items: center; gap: 8px; background: #16161a; padding: 6px 12px; border-radius: 20px; font-size: 14px; }
-
-        @media (max-width: 768px) {
-          .ape-container { flex-direction: column; }
-          .sidebar {
-            width: 100% !important;
-            height: auto;
-            position: fixed;
-            bottom: 0;
-            flex-direction: row;
-            border-right: none;
-            border-top: 1px solid #222;
-            padding: 5px;
-          }
-          .sidebar-header, .sidebar-footer { display: none; }
-          .sidebar-nav { flex-direction: row; justify-content: space-around; width: 100%; }
-          .sidebar-item { flex-direction: column; gap: 4px; font-size: 10px; align-items: center; }
-          .main-content { padding-bottom: 80px; }
-          .top-bar { padding: 0 20px; }
-          .view-container { padding: 20px; }
-        }
-
-        .fade-in {
-          animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+      <div className="watermark">MAGIC DASHBOARD</div>
     </div>
   );
 }
