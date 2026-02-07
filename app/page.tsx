@@ -182,7 +182,7 @@ export default function MagicOS() {
               </div>
             </div>
 
-            {/* Widget 4: AI STRATEGY (Estilo Captura 14.41.57 mejorado) */}
+            {/* Widget 4: AI STRATEGY (Estilo Captura mejorado) */}
             <div className="card" style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #1e1e2e, #13131a)', border: '1px solid #2d2d3d' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div>
@@ -203,9 +203,9 @@ export default function MagicOS() {
             <div className="card">
               <span className="card-label">Ape Terminal</span>
               <div style={{ flex: 1, color: '#444', fontFamily: 'monospace', fontSize: '12px', paddingTop: '10px' }}>
-                > System initialized...<br/>
-                > Monitoring active.<br/>
-                <span className="text-neon">>_</span>
+                &gt; System initialized...<br/>
+                &gt; Monitoring active.<br/>
+                <span className="text-neon">&gt;_</span>
               </div>
             </div>
 
