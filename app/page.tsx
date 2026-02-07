@@ -2,79 +2,90 @@
 import React, { useState, useEffect } from 'react';
 
 export default function ApeOS() {
-  const [data, setData] = useState({ capital: 28400, nodes: 42, growth: '94.2%' });
-  const [location, setLocation] = useState('Detecting location...');
-  const [weather, setWeather] = useState({ temp: '--', wind: '--' });
+  const [location, setLocation] = useState('Detecting...');
 
   useEffect(() => {
     if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        // Por ahora simulamos los datos del clima de Benicàssim, pero ya tenemos las coordenadas
-        setLocation('Benicàssim, ES');
-        setWeather({ temp: '17°C', wind: '10km/h' });
-      }, () => {
-        setLocation('Benicàssim (Default)');
-        setWeather({ temp: '17°C', wind: '10km/h' });
-      });
+      navigator.geolocation.getCurrentPosition(() => setLocation('Benicàssim, ES'), () => setLocation('Benicàssim, ES'));
     }
   }, []);
 
   return (
     <div style={{ display: 'flex', backgroundColor: '#050505', minHeight: '100vh', color: 'white', fontFamily: 'sans-serif' }}>
-      {/* SIDEBAR PREMIUM */}
+      
+      {/* SIDEBAR CON LOGO DE RAYO */}
       <div style={{ width: '260px', borderRight: '1px solid #1a1a1a', padding: '30px', display: 'flex', flexDirection: 'column', backgroundColor: '#080808' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '50px' }}>
-          <div style={{ width: '30px', height: '30px', backgroundColor: '#00d4ff', borderRadius: '6px' }}></div>
-          <h2 style={{ color: 'white', letterSpacing: '2px', fontSize: '18px', margin: 0 }}>APE OS</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '50px' }}>
+          <div style={{ width: '35px', height: '35px', backgroundColor: '#2563eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '20px' }}>⚡</span>
+          </div>
+          <h2 style={{ color: 'white', letterSpacing: '1px', fontSize: '18px', margin: 0, fontWeight: '900' }}>APE OS</h2>
         </div>
         
         <nav style={{ flexGrow: 1 }}>
-          {['Command Center', 'Portfolio', 'Nodes', 'Analytics', 'Settings'].map(item => (
-            <div key={item} style={{ padding: '15px 0', color: item === 'Command Center' ? 'white' : '#444', cursor: 'pointer', fontSize: '14px', fontWeight: item === 'Command Center' ? 'bold' : 'normal' }}>
-              {item === 'Command Center' ? '● ' : ''}{item}
-            </div>
+          {['Command Center', 'Trading Lab', 'AI Proposals', 'Project Board', 'Settings'].map(item => (
+            <div key={item} style={{ padding: '15px 0', color: item === 'Command Center' ? '#00d4ff' : '#555', cursor: 'pointer', fontSize: '14px' }}>{item}</div>
           ))}
         </nav>
 
         <div style={{ backgroundColor: '#111', padding: '15px', borderRadius: '12px', border: '1px solid #222' }}>
-          <div style={{ fontSize: '13px', color: 'white', fontWeight: 'bold' }}>Dasotillo</div>
-          <div style={{ fontSize: '11px', color: '#00d4ff', marginTop: '2px' }}>FOUNDER</div>
+          <div style={{ fontSize: '13px', fontWeight: 'bold' }}>Dasotillo</div>
+          <div style={{ fontSize: '11px', color: '#00d4ff' }}>FOUNDER</div>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ flexGrow: 1, padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', letterSpacing: '-0.5px' }}>SYSTEM OVERVIEW</h1>
-          <button style={{ backgroundColor: 'white', color: 'black', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>NEW DEPLOYMENT</button>
+      <div style={{ flexGrow: 1, padding: '40px', overflowY: 'auto' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>{location} DASHBOARD</h1>
+          <div style={{ fontSize: '14px', color: '#39ff14' }}>● SYSTEM_ACTIVE</div>
         </header>
 
-        {/* METRICS GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px', marginBottom: '40px' }}>
-          {[
-            { label: 'CAPITAL FLOW', val: data.capital, unit: '$', color: '#39ff14', pulse: true },
-            { label: 'ACTIVE NODES', val: data.nodes, unit: '', color: '#00d4ff', pulse: false },
-            { label: 'SYSTEM GROWTH', val: data.growth, unit: '', color: '#bc13fe', pulse: false }
-          ].map((m, i) => (
-            <div key={i} style={{ backgroundColor: '#0a0a0a', padding: '30px', borderRadius: '16px', border: '1px solid #1a1a1a', position: 'relative', overflow: 'hidden' }}>
-              <p style={{ fontSize: '11px', color: '#666', margin: '0 0 15px 0', fontWeight: 'bold', textTransform: 'uppercase' }}>{m.label}</p>
-              <h2 style={{ fontSize: '36px', margin: 0, color: 'white' }}>{m.unit}{m.val.toLocaleString()}</h2>
-              {m.pulse && <div style={{ marginTop: '15px', height: '2px', width: '100%', background: `linear-gradient(90deg, transparent, ${m.color}, transparent)` }}></div>}
-            </div>
-          ))}
+        {/* FILA 1: MÉTRICAS TRADING */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
+          <div style={{ backgroundColor: '#0a0a0a', padding: '20px', borderRadius: '16px', border: '1px solid #1a1a1a' }}>
+            <p style={{ fontSize: '10px', color: '#666' }}>TREND SIGNAL V1</p>
+            <h2 style={{ color: '#39ff14' }}>LONG_ENTRY</h2>
+            <div style={{ height: '2px', background: '#39ff14', width: '60%', marginTop: '10px' }}></div>
+          </div>
+          <div style={{ backgroundColor: '#0a0a0a', padding: '20px', borderRadius: '16px', border: '1px solid #1a1a1a' }}>
+            <p style={{ fontSize: '10px', color: '#666' }}>DAILY CASH BOT</p>
+            <h2 style={{ color: 'white' }}>+2.50</h2>
+          </div>
+          <div style={{ backgroundColor: '#0a0a0a', padding: '20px', borderRadius: '16px', border: '1px solid #1a1a1a' }}>
+            <p style={{ fontSize: '10px', color: '#666' }}>ENVIRONMENT</p>
+            <h2 style={{ color: '#00d4ff' }}>17°C / 12kmh</h2>
+          </div>
         </div>
 
-        {/* GEOLOCATED INTELLIGENCE BANNER */}
-        <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #581c87 100%)', padding: '40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '20px', right: '30px', color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>LIVE_NODE_01</div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase' }}>{location} INTELLIGENCE</h3>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '16px', maxWidth: '500px', lineHeight: '1.6' }}>
-            Infraestructura optimizada en tiempo real. 
-            Vientos: <span style={{color: '#39ff14'}}>{weather.wind}</span> • Temp: <span style={{color: '#00d4ff'}}>{weather.temp}</span>
-          </p>
-          <div style={{ marginTop: '30px', display: 'flex', gap: '15px' }}>
-            <button style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>VIEW LOGS</button>
-            <button style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', backdropFilter: 'blur(10px)' }}>STATUS</button>
+        {/* FILA 2: AI & PROYECTOS */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
+          {/* AI PROPOSALS WIDGET */}
+          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #581c87 100%)', padding: '30px', borderRadius: '24px' }}>
+            <h3 style={{ margin: '0 0 15px 0' }}>💡 GEMINI BUSINESS PROPOSAL</h3>
+            <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.6' }}>
+              Analizando mercados... Esperando reset de Ape para inyectar la primera propuesta de cash rápido.
+            </p>
+            <button style={{ marginTop: '20px', background: 'white', color: 'black', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold' }}>SAVE TO NOTION</button>
+          </div>
+
+          {/* TASKS & PROGRESS */}
+          <div style={{ backgroundColor: '#0a0a0a', padding: '25px', borderRadius: '20px', border: '1px solid #1a1a1a' }}>
+            <h3 style={{ fontSize: '14px', marginBottom: '20px', color: '#00d4ff' }}>PROJECT_ADVANCE</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
+                <span>Ape Dashboard V2</span>
+                <span>85%</span>
+              </div>
+              <div style={{ height: '4px', background: '#222', borderRadius: '2px' }}>
+                <div style={{ width: '85%', height: '100%', background: '#00d4ff' }}></div>
+              </div>
+            </div>
+            <div style={{ marginTop: '25px' }}>
+              <h3 style={{ fontSize: '14px', marginBottom: '15px' }}>CRITICAL_TASKS</h3>
+              <div style={{ fontSize: '13px', color: '#666' }}>- Connect Supabase DB</div>
+              <div style={{ fontSize: '13px', color: '#666' }}>- Link Trend Signal API</div>
+            </div>
           </div>
         </div>
       </div>
