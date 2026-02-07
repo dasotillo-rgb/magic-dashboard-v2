@@ -1,6 +1,109 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
+// --- ESTILOS INYECTADOS (CSS IN JS) ---
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
+  
+  * { box-sizing: border-box; }
+  body { margin: 0; background-color: #000000; color: #ffffff; font-family: 'Inter', sans-serif; overflow: hidden; }
+  
+  /* Layout Principal */
+  .layout { display: flex; height: 100vh; width: 100vw; }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    background-color: #050505;
+    border-right: 1px solid #1A1A1A;
+    display: flex; flex-direction: column;
+    padding: 32px 20px;
+    flex-shrink: 0;
+  }
+  
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; padding-left: 8px; }
+  .brand-text { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #fff; }
+  
+  .nav-item {
+    padding: 12px 16px; margin-bottom: 4px;
+    border-radius: 8px; font-size: 14px; font-weight: 500; color: #888;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-item:hover { background-color: #111; color: #fff; }
+  .nav-item.active { background-color: #1A1A1A; color: #fff; font-weight: 600; }
+
+  /* Contenido Principal */
+  .main { flex: 1; padding: 48px 60px; overflow-y: auto; background: radial-gradient(circle at top right, #111 0%, #000 40%); }
+  
+  .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
+  .page-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin: 0; }
+  .status-badge { 
+    font-size: 11px; font-weight: 700; color: #39FF14; 
+    background: rgba(57, 255, 20, 0.1); padding: 6px 12px; border-radius: 20px;
+    border: 1px solid rgba(57, 255, 20, 0.2);
+  }
+
+  /* Grid System (3 Columnas Reales) */
+  .grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 24px; 
+    width: 100%;
+  }
+  
+  /* Tarjetas (Widgets) */
+  .card {
+    background-color: #0A0A0A;
+    border: 1px solid #1F1F1F;
+    border-radius: 20px;
+    padding: 28px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 180px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { border-color: #333; transform: translateY(-2px); }
+  
+  .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+  .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #555; }
+  
+  .card-value { font-size: 36px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; color: #fff; }
+  .card-sub { font-size: 13px; color: #666; margin-top: 8px; font-weight: 500; }
+  
+  /* Variaciones de Color */
+  .text-green { color: #39FF14; }
+  .text-blue { color: #3B82F6; }
+  .text-purple { color: #A855F7; }
+
+  /* Botones */
+  .btn-primary {
+    background: #fff; color: #000; border: none; padding: 12px 24px;
+    border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer;
+    margin-top: 24px;
+  }
+  .btn-primary:hover { background: #eee; }
+  
+  /* Chat Input */
+  .terminal-input {
+    width: 100%; background: #111; border: 1px solid #222;
+    padding: 12px; border-radius: 8px; color: #fff; font-family: monospace; font-size: 12px;
+    margin-top: auto;
+  }
+`;
+
+// --- ICONOS SVG (COMPONENTES) ---
+const Icons = {
+  Brain: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
+  ),
+  Bolt: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  ),
+  Globe: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+  )
+};
+
 export default function MagicOS() {
   const [activeTab, setActiveTab] = useState('Magic Dashboard');
   const [mounted, setMounted] = useState(false);
@@ -9,91 +112,122 @@ export default function MagicOS() {
   if (!mounted) return null;
 
   return (
-    <div className="os-container">
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { margin: 0; background: #000; color: #fff; font-family: 'Inter', sans-serif; }
-        .os-container { display: flex; height: 100vh; }
-        
-        /* Sidebar Estilo Captura 22.58.44 */
-        .sidebar {
-          width: 280px; background: #050505; border-right: 1px solid #111;
-          padding: 40px 24px; display: flex; flex-direction: column;
-        }
-        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; }
-        .logo-box { 
-          width: 32px; height: 32px; background: #2563eb; borderRadius: 8px; 
-          display: flex; align-items: center; justifyContent: center;
-        }
-        .nav-link {
-          padding: 14px 16px; margin: 4px 0; border-radius: 12px; color: #555;
-          cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600;
-        }
-        .nav-link.active { background: #111; color: #fff; }
+    <div className="layout">
+      <style jsx global>{styles}</style>
 
-        /* Main Content */
-        .viewport { flex: 1; padding: 60px; overflow-y: auto; }
-        .header-title { font-size: 32px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 40px; }
-        
-        /* Widgets con Grid Corregido */
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
-        .widget { 
-          background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 24px; padding: 24px;
-          display: flex; flex-direction: column; justify-content: space-between; min-height: 120px;
-        }
-        .label { font-size: 10px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 1px; }
-        .value { font-size: 28px; font-weight: 700; margin-top: 8px; }
-
-        /* Banner Central Premium */
-        .strategy-banner {
-          grid-column: span 2; background: linear-gradient(135deg, #1e40af, #6b21a8);
-          border-radius: 32px; padding: 40px;
-        }
-      `}</style>
-
+      {/* SIDEBAR */}
       <aside className="sidebar">
-        <div className="logo-area">
-          <div className="logo-box">⚡</div>
-          <span style={{ fontWeight: 900, fontSize: '14px' }}>APE INTELLIGENCE</span>
+        <div className="brand">
+          <div style={{ background: '#111', padding: '6px', borderRadius: '6px', border: '1px solid #222' }}>
+            <Icons.Bolt />
+          </div>
+          <span className="brand-text">APE INTELLIGENCE</span>
         </div>
-        <nav>
-          {['Magic Dashboard', 'Trading Lab', 'AI Proposals', 'Settings'].map(tab => (
-            <div key={tab} className={`nav-link ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
-              {tab}
+        
+        <nav style={{ flex: 1 }}>
+          {['Magic Dashboard', 'Trading Lab', 'AI Proposals', 'Settings'].map(item => (
+            <div 
+              key={item} 
+              className={`nav-item ${activeTab === item ? 'active' : ''}`}
+              onClick={() => setActiveTab(item)}
+            >
+              {activeTab === item && <div style={{ width: '4px', height: '4px', background: '#fff', borderRadius: '50%' }} />}
+              {item}
             </div>
           ))}
         </nav>
+
+        {/* User Profile */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', background: '#0A0A0A', borderRadius: '12px', border: '1px solid #1A1A1A' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#222' }} />
+          <div>
+            <div style={{ fontSize: '12px', fontWeight: '700' }}>Dasotillo</div>
+            <div style={{ fontSize: '10px', color: '#555' }}>PRO PLAN</div>
+          </div>
+        </div>
       </aside>
 
-      <main className="viewport">
-        <h1 className="header-title">MAGIC DASHBOARD</h1>
-        
-        <div className="grid">
-          <div className="widget">
-            <span className="label">Trend Signal V1</span>
-            <span className="value" style={{ color: '#39ff14' }}>LONG_ENTRY</span>
+      {/* MAIN CONTENT */}
+      <main className="main">
+        <header className="header">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <span className="status-badge">SYSTEM OPERATIONAL</span>
+            </div>
+            <h1 className="page-title">{activeTab}</h1>
           </div>
-          <div className="widget">
-            <span className="label">Environment</span>
-            <span className="value">Benicàssim</span>
-          </div>
-          <div className="widget">
-            <span className="label">Global News</span>
-            <div style={{ fontSize: '12px', color: '#888', marginTop: '10px' }}>BTC support at $101.2k</div>
-          </div>
-        </div>
+        </header>
 
-        <div className="grid">
-          <div className="strategy-banner">
-            <h2 style={{ fontSize: '24px', margin: '0 0 16px 0' }}>💡 Gemini Strategy Engine</h2>
-            <p style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-              Analizando ineficiencias en el sector químico regional para optimizar flujos de caja.
-            </p>
-            <button style={{ background: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, marginTop: '20px', cursor: 'pointer' }}>
-              SYNC TO NOTION
-            </button>
+        {activeTab === 'Magic Dashboard' && (
+          <div className="grid">
+            
+            {/* Widget 1: Trading */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-label">Trend Signal</span>
+                <div style={{ width: '8px', height: '8px', background: '#39FF14', borderRadius: '50%', boxShadow: '0 0 10px #39FF14' }} />
+              </div>
+              <div>
+                <div className="card-value text-green">LONG</div>
+                <div className="card-sub">Confidence: 94%</div>
+              </div>
+            </div>
+
+            {/* Widget 2: Environment */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-label">Environment</span>
+                <Icons.Globe />
+              </div>
+              <div>
+                <div className="card-value">17°C</div>
+                <div className="card-sub">Benicàssim • Wind 10km/h</div>
+              </div>
+            </div>
+
+            {/* Widget 3: News Feed */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-label">Financial Feed</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ fontSize: '13px', borderBottom: '1px solid #222', paddingBottom: '8px' }}>
+                  BTC Testing <span className="text-green">$102k</span>
+                </div>
+                <div style={{ fontSize: '13px' }}>
+                  AI Sector: <span className="text-purple">Strong Buy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Widget 4: AI STRATEGY (Double Width) */}
+            <div className="card" style={{ gridColumn: 'span 2', background: 'linear-gradient(145deg, #0f0f0f, #050505)' }}>
+              <div className="card-header">
+                <span className="card-label text-purple">Gemini Strategy Engine</span>
+                <Icons.Brain />
+              </div>
+              <div style={{ paddingRight: '40px' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 10px 0' }}>Oportunidad: Automatización Logística</h3>
+                <p style={{ color: '#888', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+                  Detectada alta demanda en Benicàssim para sistemas de gestión de stock en tiempo real. Propuesta lista para revisión.
+                </p>
+                <button className="btn-primary">SYNC TO NOTION</button>
+              </div>
+            </div>
+
+            {/* Widget 5: Terminal */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-label">Ape Terminal</span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#444', marginBottom: '10px' }}>
+                [System]: Waiting for input...
+              </div>
+              <input type="text" className="terminal-input" placeholder="Type command..." />
+            </div>
+
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
