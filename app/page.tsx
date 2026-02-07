@@ -1,180 +1,146 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-// --- ESTILOS DE INGENIERÍA VISUAL (CSS) ---
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-  
-  :root {
-    --bg-dark: #050505;
-    --glass-bg: rgba(20, 20, 20, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --accent-blue: #3b82f6;
-    --accent-purple: #8b5cf6;
-    --accent-green: #10b981;
-    --text-main: #ffffff;
-    --text-muted: #a1a1aa;
-  }
-
-  * { box-sizing: border-box; }
-  body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
-  
-  .layout { display: flex; height: 100vh; width: 100vw; background: radial-gradient(circle at top right, #111 0%, #000 50%); }
-  
-  /* --- SIDEBAR --- */
-  .sidebar {
-    width: 280px;
-    background: rgba(5, 5, 5, 0.85);
-    backdrop-filter: blur(20px);
-    border-right: 1px solid var(--glass-border);
-    padding: 32px 24px;
-    display: flex; flex-direction: column;
-    flex-shrink: 0;
-  }
-  
-  .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 56px; }
-  .brand-logo {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-    border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-  }
-  .brand-name { font-size: 14px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
-
-  .nav-menu { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-  .nav-item {
-    padding: 12px 16px; border-radius: 12px;
-    color: var(--text-muted); font-size: 14px; font-weight: 500;
-    cursor: pointer; transition: all 0.2s ease;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .nav-item:hover { background: rgba(255,255,255,0.03); color: white; }
-  .nav-item.active { background: rgba(255,255,255,0.08); color: white; font-weight: 600; border: 1px solid rgba(255,255,255,0.05); }
-
-  /* --- MAIN CONTENT --- */
-  .viewport { flex: 1; padding: 48px 64px; overflow-y: auto; }
-  
-  .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
-  .header-title-box { display: flex; align-items: center; gap: 16px; }
-  .page-title { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; margin: 0; }
-  
-  .status-indicator {
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);
-    padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--accent-green);
-  }
-  .pulse-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite; }
-
-  /* --- GRID SYSTEM --- */
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: minmax(180px, auto);
-    gap: 24px;
-  }
-
-  /* --- WIDGET CARDS --- */
-  .widget {
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 28px;
-    display: flex; flex-direction: column; justify-content: space-between;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s;
-    position: relative; overflow: hidden;
-  }
-  .widget:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); }
-
-  .widget-label { 
-    font-size: 11px; font-weight: 700; text-transform: uppercase; 
-    letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 12px; display: block;
-  }
-  
-  .value-xl { font-size: 32px; font-weight: 700; letter-spacing: -1px; color: white; }
-  .value-sub { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
-
-  /* --- SPECIAL WIDGETS --- */
-  .w-gradient { background: linear-gradient(145deg, rgba(30, 30, 40, 0.8), rgba(10, 10, 10, 0.9)); }
-  .w-ai { background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 70%), var(--glass-bg); }
-
-  .btn-action {
-    background: white; color: black; border: none; padding: 12px 24px;
-    border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;
-    margin-top: 24px; transition: transform 0.2s;
-  }
-  .btn-action:hover { transform: scale(1.02); }
-
-  .chat-input {
-    background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-    padding: 12px; border-radius: 10px; color: white; width: 100%;
-    font-family: monospace; font-size: 12px; margin-top: auto;
-  }
-
-  .form-group { margin-bottom: 24px; }
-  .form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-  .form-select { 
-    width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
-    border: 1px solid var(--glass-border); color: white; border-radius: 8px;
-  }
-
-  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-  @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-3px); } 100% { transform: translateY(0px); } }
-  .animate-float { animation: float 3s ease-in-out infinite; }
-`;
-
-// --- ICONOS VECTORIALES (SVG) ---
+// --- CONFIGURACIÓN E ICONOS ---
 const Icons = {
-  Bolt: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  Brain: () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-float"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>,
-  Chart: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
-  Settings: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-  Dashboard: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  Target: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+  Zap: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  Brain: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2"><path d="M12 2a5 5 0 0 1 5 5v2a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2 1 1 0 0 0 1-1V7a5 5 0 0 1 5-5z"/><path d="M9 22v-2"/><path d="M15 22v-2"/></svg>,
+  Cloud: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.5 19a5.5 5.5 0 0 0 1.5-10.5 8.5 8.5 0 1 0-14.5 7.5"/></svg>,
+  Trending: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  Notion: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4.459 4.208c.746-.606 1.705-.826 3.232-.826h9.702c1.334 0 2.217.152 2.766.458.549.306.825.864.825 1.673v12.23c0 .736-.264 1.3-.792 1.692-.528.392-1.341.587-2.439.587H5.975c-1.144 0-1.936-.181-2.378-.544-.442-.362-.663-.924-.663-1.685V5.98c0-.796.241-1.387.725-1.772zM15.46 6.13h-6.92v11.74h1.75V8.58l4.42 8.79h1.75V6.13h-1zm-6.92 0H6.79v11.74h1.75V6.13z"/></svg>
 };
 
-export default function MagicOS() {
-  const [activeTab, setActiveTab] = useState('Magic Dashboard');
-  const [isMounted, setIsMounted] = useState(false);
-  const [settings, setSettings] = useState({ lang: 'Spanish', industry: 'Finance & Tech' });
+export default function ApeOSV2() {
+  const [time, setTime] = useState(new Set().add(new Date()));
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [syncStatus, setSyncStatus] = useState('Idle');
+  
+  // Efecto para reloj en tiempo real
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  useEffect(() => setIsMounted(true), []);
-  if (!isMounted) return null;
+  const handleSyncNotion = async () => {
+    setSyncStatus('Syncing...');
+    // Simulación de API call a Notion
+    setTimeout(() => setSyncStatus('Success'), 2000);
+    setTimeout(() => setSyncStatus('Idle'), 5000);
+  };
 
   return (
-    <div className="layout">
-      <style jsx global>{styles}</style>
+    <div className="container">
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@300;400;600;800&display=swap');
+        
+        :root {
+          --bg: #030303;
+          --glass: rgba(15, 15, 15, 0.7);
+          --border: rgba(255, 255, 255, 0.06);
+          --accent: #3b82f6;
+          --purple: #8b5cf6;
+          --green: #10b981;
+          --text: #efefef;
+        }
+
+        body { 
+          margin: 0; background: var(--bg); color: var(--text); 
+          font-family: 'Inter', sans-serif; overflow-x: hidden;
+        }
+
+        .container { display: flex; height: 100vh; background: radial-gradient(circle at 0% 0%, #111 0%, #030303 100%); }
+
+        /* Sidebar */
+        .sidebar {
+          width: 260px; border-right: 1px solid var(--border);
+          padding: 40px 24px; display: flex; flex-direction: column;
+          background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);
+        }
+        .logo { font-family: 'Space Grotesk'; font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 10px; margin-bottom: 60px; }
+        .nav-item { 
+          padding: 14px 18px; border-radius: 12px; cursor: pointer; 
+          transition: all 0.3s; color: #666; font-weight: 500; font-size: 14px;
+          display: flex; align-items: center; gap: 12px;
+        }
+        .nav-item.active { background: var(--border); color: white; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+
+        /* Main Viewport */
+        .viewport { flex: 1; overflow-y: auto; padding: 40px 60px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        
+        /* Grid System */
+        .dashboard-grid {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          grid-auto-rows: minmax(160px, auto);
+          gap: 24px;
+        }
+
+        /* Widgets */
+        .widget {
+          background: var(--glass);
+          border: 1px solid var(--border);
+          border-radius: 28px;
+          padding: 30px;
+          backdrop-filter: blur(40px);
+          position: relative;
+          transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .widget:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-5px); }
+
+        .widget-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #555; margin-bottom: 20px; display: block; }
+        
+        /* Typography */
+        .val-lg { font-size: 38px; font-weight: 800; font-family: 'Space Grotesk'; letter-spacing: -1px; }
+        .val-md { font-size: 22px; font-weight: 600; }
+        .text-mute { color: #888; font-size: 13px; }
+
+        /* Buttons */
+        .btn-notion {
+          background: white; color: black; border: none; padding: 10px 20px;
+          border-radius: 99px; font-weight: 700; font-size: 12px;
+          display: flex; align-items: center; gap: 8px; cursor: pointer;
+          transition: 0.3s;
+        }
+        .btn-notion:hover { transform: scale(1.05); background: #f0f0f0; }
+
+        /* ProgressBar */
+        .progress-container { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 10px; }
+        .progress-bar { height: 100%; border-radius: 10px; background: var(--accent); }
+
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+        .badge-green { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+      `}</style>
 
       {/* --- SIDEBAR --- */}
       <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-logo"><Icons.Bolt /></div>
-          <span className="brand-name">Ape Intelligence</span>
+        <div className="logo">
+          <Icons.Zap /> Ape Intelligence
         </div>
-        
-        <nav className="nav-menu">
-          {[
-            { id: 'Magic Dashboard', icon: <Icons.Dashboard /> },
-            { id: 'Trading Lab', icon: <Icons.Chart /> },
-            { id: 'AI Proposals', icon: <Icons.Brain /> }, // Reusing brain icon small
-            { id: 'Settings', icon: <Icons.Settings /> }
-          ].map((item) => (
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {['Overview', 'Daily Ventures', 'Trading Lab', 'System Settings'].map(tab => (
             <div 
-              key={item.id} 
-              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
+              key={tab} 
+              className={`nav-item ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab)}
             >
-              {item.icon}
-              {item.id}
+              {tab === 'Overview' && <Icons.Target />}
+              {tab === 'Daily Ventures' && <Icons.Brain />}
+              {tab === 'Trading Lab' && <Icons.Trending />}
+              {tab}
             </div>
           ))}
         </nav>
 
-        <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#222', border: '1px solid #333' }} />
+        <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+          <div style={{ fontSize: '11px', color: '#444', marginBottom: '10px' }}>USER CONTEXT</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)' }} />
             <div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'white' }}>Dasotillo</div>
-              <div style={{ fontSize: '11px', color: '#666' }}>CEO • PRO PLAN</div>
+              <div style={{ fontSize: '13px', fontWeight: '700' }}>Dasotillo</div>
+              <div style={{ fontSize: '10px', color: '#666' }}>Lead Architect</div>
             </div>
           </div>
         </div>
@@ -182,117 +148,118 @@ export default function MagicOS() {
 
       {/* --- MAIN AREA --- */}
       <main className="viewport">
-        <header className="header">
-          <div className="header-title-box">
-            {activeTab === 'Magic Dashboard' && <Icons.Brain />}
-            <h1 className="page-title">{activeTab}</h1>
+        <header className="top-bar">
+          <div>
+            <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 800 }}>{activeTab}</h1>
+            <p className="text-mute">Welcome back, system is operating at 98% efficiency.</p>
           </div>
-          <div className="status-indicator">
-            <div className="pulse-dot"></div>
-            SYSTEM OPERATIONAL
-          </div>
+          <button className="btn-notion" onClick={handleSyncNotion}>
+            <Icons.Notion />
+            {syncStatus === 'Idle' ? 'SYNC TO NOTION' : syncStatus.toUpperCase()}
+          </button>
         </header>
 
-        {/* --- DASHBOARD VIEW --- */}
-        {activeTab === 'Magic Dashboard' && (
-          <div className="grid-container">
-            
-            {/* 1. Trading Widget (Col 1-4) */}
-            <div className="widget" style={{ gridColumn: 'span 4' }}>
+        <div className="dashboard-grid">
+          
+          {/* MÓDULO 1: ENTORNO LOCAL (Benicàssim) */}
+          <div className="widget" style={{ gridColumn: 'span 3' }}>
+            <span className="widget-title">Local Environment</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <Icons.Cloud />
               <div>
-                <span className="widget-label">Trend Signal V1</span>
-                <div className="value-xl" style={{ color: '#10b981' }}>LONG ENTRY</div>
-              </div>
-              <div className="value-sub">Confidence Score: <span style={{ color: 'white' }}>94%</span></div>
-              <div style={{ height: '4px', width: '100%', background: '#222', marginTop: '16px', borderRadius: '2px' }}>
-                <div style={{ height: '100%', width: '94%', background: '#10b981', borderRadius: '2px' }}></div>
+                <div className="val-md">17°C</div>
+                <div className="text-mute">Benicàssim, ES</div>
               </div>
             </div>
+            <div style={{ marginTop: '20px', fontSize: '12px' }}>
+               Viento: <span style={{ color: 'white' }}>12 km/h NE</span> <br/>
+               {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+          </div>
 
-            {/* 2. Environment Widget (Col 5-8) */}
-            <div className="widget" style={{ gridColumn: 'span 4' }}>
+          {/* MÓDULO 2: TRADING INDICATOR (Trend Signal) */}
+          <div className="widget" style={{ gridColumn: 'span 5' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span className="widget-label" style={{ color: '#3b82f6' }}>Location Data</span>
-                <div className="value-xl">Benicàssim</div>
+                <span className="widget-title">Trend Signal V2.1</span>
+                <div className="val-lg" style={{ color: 'var(--green)' }}>STRONG BUY</div>
               </div>
-              <div className="value-sub">17°C • Clear Skies • Wind 10km/h</div>
+              <div className="badge badge-green">LIVE FEED</div>
             </div>
-
-            {/* 3. News Widget (Col 9-12) */}
-            <div className="widget" style={{ gridColumn: 'span 4' }}>
-              <span className="widget-label" style={{ color: '#f59e0b' }}>{settings.industry} Feed</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ fontSize: '13px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                  BTC consolidates above <span style={{ color: '#10b981' }}>$102k</span> support.
-                </div>
-                <div style={{ fontSize: '13px' }}>
-                  New AI regulation boosts tech sector calls.
-                </div>
-              </div>
+            <div style={{ marginTop: '15px' }} className="text-mute">
+              Confidence Index: <span style={{ color: 'white' }}>92.4%</span> | Risk: <span style={{ color: '#f59e0b' }}>Low</span>
             </div>
-
-            {/* 4. AI Strategy (Big) (Col 1-8) */}
-            <div className="widget w-ai" style={{ gridColumn: 'span 8', minHeight: '240px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                  <span className="widget-label" style={{ margin: 0, color: '#8b5cf6' }}>Gemini Strategy Engine</span>
-                </div>
-                <h3 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 12px 0' }}>Propuesta: Automatización Logística Regional</h3>
-                <p style={{ color: '#a1a1aa', fontSize: '15px', lineHeight: '1.6', maxWidth: '600px', margin: 0 }}>
-                  Detectada ineficiencia en distribución química local. Se sugiere implementar API de tracking para proveedores en Benicàssim. ROI estimado: 15% mensual.
-                </p>
-              </div>
-              <button className="btn-action">SYNC TO NOTION</button>
+            <div className="progress-container">
+              <div className="progress-bar" style={{ width: '92%', background: 'var(--green)' }}></div>
             </div>
-
-            {/* 5. Terminal / Chat (Col 9-12) */}
-            <div className="widget w-gradient" style={{ gridColumn: 'span 4' }}>
-              <span className="widget-label">Ape Terminal</span>
-              <div style={{ flex: 1, fontFamily: 'monospace', fontSize: '12px', color: '#a1a1aa', overflow: 'hidden' }}>
-                &gt; Connecting to Ape Brain...<br/>
-                &gt; Context loaded.<br/>
-                &gt; <span style={{ color: '#10b981' }}>Online.</span>
-              </div>
-              <input type="text" className="chat-input" placeholder="Type command..." />
-            </div>
-
           </div>
-        )}
 
-        {/* --- SETTINGS VIEW --- */}
-        {activeTab === 'Settings' && (
-          <div className="widget" style={{ maxWidth: '600px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '32px' }}>System Configuration</h2>
-            
-            <div className="form-group">
-              <label className="form-label">Interface Language</label>
-              <select className="form-select" value={settings.lang} onChange={(e) => setSettings({...settings, lang: e.target.value})}>
-                <option>Spanish</option>
-                <option>English</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">News Feed Industry</label>
-              <select className="form-select" value={settings.industry} onChange={(e) => setSettings({...settings, industry: e.target.value})}>
-                <option>Finance & Tech</option>
-                <option>Real Estate</option>
-                <option>Chemical / Industrial</option>
-              </select>
-            </div>
-
-            <button className="btn-action" style={{ background: '#3b82f6', color: 'white' }}>SAVE CHANGES</button>
+          {/* MÓDULO 3: DAILY VENTURES (Cash Rápido) */}
+          <div className="widget" style={{ gridColumn: 'span 4' }}>
+            <span className="widget-title">Daily Ventures (AI Analysis)</span>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px', fontSize: '13px', display: 'flex', gap: '10px' }}>
+                <span style={{ color: 'var(--purple)' }}>#1</span> Automatización de Logística Local
+              </li>
+              <li style={{ marginBottom: '12px', fontSize: '13px', display: 'flex', gap: '10px' }}>
+                <span style={{ color: 'var(--purple)' }}>#2</span> Arbitraje de APIs de IA (LatAm)
+              </li>
+              <li style={{ fontSize: '13px', display: 'flex', gap: '10px' }}>
+                <span style={{ color: 'var(--purple)' }}>#3</span> Optimización de Stock Químico
+              </li>
+            </ul>
           </div>
-        )}
 
-        {/* --- PLACEHOLDERS --- */}
-        {(activeTab === 'Trading Lab' || activeTab === 'AI Proposals') && (
-          <div className="widget" style={{ alignItems: 'center', justifyContent: 'center', height: '400px' }}>
-            <Icons.Chart />
-            <h3 style={{ marginTop: '20px', color: '#666' }}>Module Loading...</h3>
+          {/* MÓDULO 4: PROYECTOS CRÍTICOS (Control de Proyectos) */}
+          <div className="widget" style={{ gridColumn: 'span 8', minHeight: '300px' }}>
+            <span className="widget-title">Critical Project Pipeline</span>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ padding: '15px 0', fontSize: '12px', color: '#444' }}>PROJECT NAME</th>
+                  <th style={{ padding: '15px 0', fontSize: '12px', color: '#444' }}>STATUS</th>
+                  <th style={{ padding: '15px 0', fontSize: '12px', color: '#444' }}>PROGRESS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '20px 0', fontSize: '14px', fontWeight: 600 }}>ClawBot V2 Core</td>
+                  <td><span className="badge badge-green">STABLE</span></td>
+                  <td style={{ width: '200px' }}>
+                    <div className="progress-container"><div className="progress-bar" style={{ width: '85%' }}></div></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '20px 0', fontSize: '14px', fontWeight: 600 }}>Notion Bridge API</td>
+                  <td><span className="badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>ACTIVE</span></td>
+                  <td>
+                    <div className="progress-container"><div className="progress-bar" style={{ width: '60%', background: '#3b82f6' }}></div></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        )}
 
+          {/* MÓDULO 5: COMUNICACIÓN DIRECTA (Brain Console) */}
+          <div className="widget" style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column' }}>
+            <span className="widget-title">Ape Brain Console</span>
+            <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '15px', padding: '15px', fontFamily: 'monospace', fontSize: '12px', color: '#10b981' }}>
+              &gt; Dashboard V2.0 initialized.<br/>
+              &gt; Weather API: Connected.<br/>
+              &gt; Trading Node: Online.<br/>
+              &gt; _
+            </div>
+            <input 
+              type="text" 
+              placeholder="Send command to AI..." 
+              style={{ 
+                marginTop: '15px', background: 'var(--border)', border: 'none', 
+                padding: '12px 20px', borderRadius: '12px', color: 'white', fontSize: '13px'
+              }} 
+            />
+          </div>
+
+        </div>
       </main>
     </div>
   );
