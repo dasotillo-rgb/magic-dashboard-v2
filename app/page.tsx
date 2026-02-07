@@ -1,340 +1,267 @@
 'use client';
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  TrendingUp, TrendingDown, Brain, Zap, Shield, ShieldOff, 
-  MapPin, Wind, Droplets, Send, CheckCircle2, Play, Square,
-  Layers, Rocket, PlusCircle, LayoutDashboard, Settings, Eye, EyeOff
+  LineChart, Wallet,  Activity, Send, MapPin, 
+  Briefcase, CheckCircle, Eye, EyeOff, LayoutGrid, Settings,
+  CloudRain, Zap, TrendingUp, Terminal
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export default function ApeOSV3() {
-  // --- ESTADOS ---
-  const [privacyMode, setPrivacyMode] = useState(false);
-  const [isBotActive, setIsBotActive] = useState(false);
-  const [trendSignal, setTrendSignal] = useState<'BULLISH' | 'BEARISH'>('BULLISH');
-  const [location, setLocation] = useState({ city: 'Detectando...', temp: '--', condition: 'Cargando...' });
-  const [messages, setMessages] = useState([
-    { role: 'ape', content: 'ApeOS V3 Online. ¿Qué operaciones ejecutamos hoy?' }
-  ]);
-  const [inputMsg, setInputMsg] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [showBalance, setShowBalance] = useState(true);
+  const [weather, setWeather] = useState({ temp: '--', condition: 'Scanning...' });
+  const [inputCmd, setInputCmd] = useState('');
 
-  // --- LÓGICA DE GEOLOCALIZACIÓN ---
+  // Simulación de carga de clima real
   useEffect(() => {
-    if ("geolocation" in navigator) {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
-        // Simulación de respuesta basada en coordenadas
-        setLocation({
-          city: "Benicàssim Area",
-          temp: "21°C",
-          condition: "Cielo Despejado"
-        });
+        // Aquí conectaríamos con OpenWeather API real
+        setWeather({ temp: '18°C', condition: 'Benicàssim • Clear' });
+      }, () => {
+        setWeather({ temp: '18°C', condition: 'Benicàssim (Est)' });
       });
     }
   }, []);
 
-  // --- AUTO-SCROLL CHAT ---
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // --- HANDLERS ---
-  const sendMessage = () => {
-    if (!inputMsg) return;
-    const newMsgs = [...messages, { role: 'user', content: inputMsg }];
-    setMessages(newMsgs);
-    setInputMsg('');
-    setTimeout(() => {
-      setMessages([...newMsgs, { role: 'ape', content: 'Entendido. Sincronizando orden con Pionex y actualizando logs en Notion...' }]);
-    }, 800);
-  };
-
   return (
     <div className="layout">
+      {/* --- ESTILOS NATIVOS (NO TAILWIND) --- */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Space+Grotesk:wght@500;700&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@300;400;600;800&display=swap');
+        
         :root {
-          --bg-dark: #020202;
+          --bg: #050505;
+          --glass: rgba(20, 20, 20, 0.6);
           --glass-border: rgba(255, 255, 255, 0.08);
-          --emerald: #10b981;
-          --purple: #8b5cf6;
-          --amber: #f59e0b;
-          --cyan: #06b6d4;
-          --text-main: #efefef;
-          --text-muted: #666;
+          --neon-green: #10b981;
+          --neon-purple: #8b5cf6;
+          --neon-cyan: #06b6d4;
+          --neon-amber: #f59e0b;
+          --text-main: #ffffff;
+          --text-muted: #888888;
         }
 
-        * { box-sizing: border-box; }
-        body { 
-          margin: 0; 
-          background: radial-gradient(circle at top left, #111, #020202); 
-          color: var(--text-main);
-          font-family: 'Inter', sans-serif;
-          min-height: 100vh;
+        body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        
+        .layout { display: flex; min-height: 100vh; background: radial-gradient(circle at 15% 15%, #111 0%, #000 100%); }
+        
+        /* SIDEBAR */
+        .sidebar { 
+          width: 80px; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; align-items: center; padding: 30px 0; gap: 20px; z-index: 10;
+          background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
+          transition: width 0.3s ease;
         }
+        .sidebar:hover { width: 240px; align-items: flex-start; padding-left: 20px; }
+        .sidebar:hover .nav-label { display: block; opacity: 1; }
+        .nav-label { display: none; opacity: 0; white-space: nowrap; margin-left: 15px; font-weight: 500; font-size: 14px; transition: opacity 0.2s; }
+        
+        .nav-btn {
+          width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+          color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+        }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar:hover .nav-btn { width: 100%; justify-content: flex-start; padding-left: 12px; }
 
-        .layout { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
-
-        /* HEADER */
+        /* MAIN */
+        .viewport { flex: 1; padding: 40px; overflow-y: auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .brand { display: flex; align-items: center; gap: 15px; }
-        .logo-box { 
-          background: linear-gradient(135deg, var(--purple), #3b82f6);
-          padding: 10px; border-radius: 14px; display: flex; align-items: center;
-          box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-        }
-        .brand h1 { font-family: 'Space Grotesk'; font-weight: 900; font-size: 24px; margin: 0; letter-spacing: -1px; }
-        .system-status { font-size: 10px; font-weight: 800; color: var(--emerald); display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+        .title { font-family: 'Space Grotesk'; font-size: 32px; font-weight: 700; letter-spacing: -1px; margin: 0; }
         
-        .header-controls { display: flex; align-items: center; gap: 15px; }
-        .icon-btn { 
-          background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
-          color: white; padding: 12px; border-radius: 12px; cursor: pointer; transition: 0.3s;
-        }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); }
-        .balance-card { 
-          background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-          padding: 10px 20px; border-radius: 12px; text-align: right;
-        }
-
         /* GRID SYSTEM */
-        .grid-container {
-          display: grid;
-          grid-template-columns: repeat(12, 1fr);
-          gap: 20px;
-        }
-
-        /* WIDGET BASE */
-        .widget {
-          background: rgba(10, 10, 10, 0.4);
-          backdrop-filter: blur(20px);
-          border: 1px solid var(--glass-border);
-          border-radius: 32px;
-          padding: 30px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        /* TINTED GLASS EFFECT */
-        .w-trading { border-color: rgba(16, 185, 129, 0.2); box-shadow: 0 10px 40px rgba(16, 185, 129, 0.05); }
-        .w-ai { border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 10px 40px rgba(139, 92, 246, 0.05); }
-        .w-projects { border-color: rgba(245, 158, 11, 0.2); box-shadow: 0 10px 40px rgba(245, 158, 11, 0.05); }
-        .w-weather { border-color: rgba(6, 182, 212, 0.2); box-shadow: 0 10px 40px rgba(6, 182, 212, 0.05); }
-
-        .widget-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; grid-auto-rows: minmax(180px, auto); }
         
-        /* TRADING LAB COMPONENTS */
-        .signal-badge { background: var(--emerald); color: black; padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; }
-        .val-display { font-size: 42px; font-weight: 900; margin: 10px 0; font-family: 'Space Grotesk'; }
-        .btn-trade-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-buy { flex: 1; background: var(--emerald); border: none; padding: 16px; border-radius: 16px; font-weight: 900; color: black; cursor: pointer; transition: 0.2s; }
-        .btn-sell { flex: 1; background: transparent; border: 1px solid var(--emerald); padding: 16px; border-radius: 16px; font-weight: 900; color: var(--emerald); cursor: pointer; }
-        .btn-buy:active, .btn-sell:active { transform: scale(0.95); }
-
-        /* CHAT COMPONENTS */
-        .chat-container { height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; }
-        .msg-ape { background: rgba(255,255,255,0.05); border-top-left-radius: 2px; }
-        .msg-user { background: var(--purple); align-self: flex-end; border-top-right-radius: 2px; }
-        .chat-input-wrapper { position: relative; margin-top: 20px; }
-        .chat-input { 
-          width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); 
-          padding: 16px; border-radius: 16px; color: white; outline: none;
+        /* WIDGETS */
+        .card {
+          background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px;
+          backdrop-filter: blur(24px); position: relative; overflow: hidden; display: flex; flex-direction: column;
+          transition: transform 0.3s, box-shadow 0.3s;
         }
-        .chat-send { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--purple); border: none; padding: 8px; border-radius: 10px; color: white; cursor: pointer; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); }
 
-        /* EMPIRE CONTROL */
-        .project-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 16px; margin-bottom: 10px; }
-        .progress-track { height: 6px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 8px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--amber); border-radius: 10px; }
+        /* Widget Variants */
+        .w-trading { border-top: 2px solid var(--neon-green); background: linear-gradient(180deg, rgba(16,185,129,0.02) 0%, rgba(0,0,0,0) 100%), var(--glass); }
+        .w-ai { border-top: 2px solid var(--neon-purple); background: linear-gradient(180deg, rgba(139,92,246,0.02) 0%, rgba(0,0,0,0) 100%), var(--glass); }
+        .w-projects { border-top: 2px solid var(--neon-amber); }
+        .w-env { border-top: 2px solid var(--neon-cyan); }
+
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        
+        /* Typography & Elements */
+        .stat-val { font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; color: white; }
+        .btn-action { 
+          background: white; color: black; border: none; padding: 12px; border-radius: 12px; font-weight: 700; 
+          cursor: pointer; width: 100%; margin-top: auto; display: flex; justify-content: center; gap: 8px; font-size: 13px;
+        }
+        .btn-action:hover { opacity: 0.9; transform: scale(1.02); }
+        .btn-trading { width: 48%; padding: 12px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; color: black; }
 
         /* RESPONSIVE */
-        @media (max-width: 1024px) {
-          .grid-container { grid-template-columns: repeat(2, 1fr); }
-          .lg-span-8, .lg-span-6, .lg-span-4 { grid-column: span 2; }
-        }
-        @media (max-width: 768px) {
-          .grid-container { grid-template-columns: 1fr; }
-          .lg-span-8, .lg-span-6, .lg-span-4 { grid-column: span 1; }
-        }
-
-        .lg-span-6 { grid-column: span 6; }
-        .lg-span-8 { grid-column: span 8; }
-        .lg-span-4 { grid-column: span 4; }
+        @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } .sidebar { display: none; } .layout { flex-direction: column; } }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
       `}</style>
 
-      {/* --- HEADER --- */}
-      <header className="header">
-        <div className="brand">
-          <div className="logo-box"><Zap fill="white" size={24}/></div>
-          <div>
-            <h1>APE OS <span style={{color: 'var(--purple)'}}>V3</span></h1>
-            <div className="system-status">
-              <span style={{width: 6, height: 6, borderRadius: '50%', background: 'var(--emerald)', boxShadow: '0 0 10px var(--emerald)'}} />
-              OPERATIONAL
-            </div>
-          </div>
-        </div>
-
-        <div className="header-controls">
-          <button className="icon-btn" onClick={() => setPrivacyMode(!privacyMode)}>
-            {privacyMode ? <EyeOff size={20} color="var(--amber)"/> : <Eye size={20}/>}
-          </button>
-          <div className="balance-card">
-            <div style={{fontSize: '10px', color: '#555', fontWeight: 800}}>TOTAL PORTFOLIO</div>
-            <div style={{fontSize: '18px', fontWeight: 900, fontFamily: 'Space Grotesk'}}>
-              {privacyMode ? "••••••" : "$12,450.82"}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* --- MAIN GRID --- */}
-      <main className="grid-container">
+      {/* --- SIDEBAR --- */}
+      <nav className="sidebar">
+        <div style={{ marginBottom: '20px' }}><Zap color="#fff" fill="#fff" /></div>
         
-        {/* WIDGET 1: TRADING LAB */}
-        <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="widget w-trading lg-span-6">
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
-            <span className="widget-label">Trading Lab / Pionex</span>
-            <span className="signal-badge">{trendSignal} SIGNAL</span>
+        {[
+          { id: 'Overview', icon: LayoutGrid },
+          { id: 'Trading Lab', icon: TrendingUp },
+          { id: 'Brain Chat', icon: Terminal },
+          { id: 'Projects', icon: Briefcase },
+          { id: 'Settings', icon: Settings },
+        ].map((item) => (
+          <div key={item.id} className={`nav-btn ${activeTab === item.id ? 'active' : ''}`} onClick={() => setActiveTab(item.id)}>
+            <item.icon size={20} />
+            <span className="nav-label">{item.id}</span>
           </div>
-          <div className="val-display" style={{color: trendSignal === 'BULLISH' ? 'var(--emerald)' : '#ef4444'}}>
-            {trendSignal === 'BULLISH' ? 'LONG ENTRY' : 'SHORT ENTRY'}
+        ))}
+      </nav>
+
+      {/* --- CONTENT --- */}
+      <main className="viewport">
+        <header className="header">
+          <div>
+            <h1 className="title">{activeTab}</h1>
+            <p style={{ color: '#666', fontSize: '14px', marginTop: '5px' }}>System Active • {weather.temp} in {weather.condition}</p>
           </div>
-          <p style={{fontSize: '13px', color: '#888'}}>Trend Confidence: <span style={{color: 'white'}}>94.2%</span></p>
+          <div style={{ display: 'flex', gap: '15px' }}>
+             <button className="nav-btn" style={{background: 'rgba(255,255,255,0.05)', width: 'auto', padding: '0 20px', borderRadius: '20px'}}>
+               <CloudRain size={16} style={{marginRight: '8px'}} /> {weather.temp}
+             </button>
+          </div>
+        </header>
+
+        <div className="grid">
           
-          <div style={{marginTop: '30px', padding: '20px', background: 'rgba(0,0,0,0.2)', borderRadius: '20px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                <button 
-                  onClick={() => setIsBotActive(!isBotActive)}
-                  style={{
-                    background: isBotActive ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                    border: 'none', padding: '10px', borderRadius: '12px', cursor: 'pointer'
-                  }}
-                >
-                  {isBotActive ? <Square size={16} color="#ef4444" fill="#ef4444"/> : <Play size={16} color="var(--emerald)" fill="var(--emerald)"/>}
-                </button>
-                <span style={{fontSize: '12px', fontWeight: 800}}>{isBotActive ? 'BOT ACTIVE' : 'BOT STANDBY'}</span>
+          {/* 1. PORTFOLIO (Col 4) */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card w-env" style={{ gridColumn: 'span 4' }}>
+            <div className="card-head">
+              <span className="card-title"><Wallet size={14} /> CAPITAL TOTAL</span>
+              <div onClick={() => setShowBalance(!showBalance)} style={{ cursor: 'pointer', color: '#666' }}>
+                {showBalance ? <Eye size={16} /> : <EyeOff size={16} />}
               </div>
-              <div style={{fontSize: '11px', color: '#555'}}>API: PIONEX_V1_STABLE</div>
             </div>
-          </div>
+            <div className="stat-val">
+              {showBalance ? '$12,450.00' : '****'}
+            </div>
+            <div style={{ color: 'var(--neon-green)', fontSize: '13px', marginTop: '5px', display: 'flex', alignItems: 'center' }}>
+              <TrendingUp size={14} style={{ marginRight: '4px' }} /> +12.5% this month
+            </div>
+          </motion.div>
 
-          <div className="btn-trade-group">
-            <button className="btn-buy">COMPRA RÁPIDA</button>
-            <button className="btn-sell">VENTA RÁPIDA</button>
-          </div>
-        </motion.div>
-
-        {/* WIDGET 2: APE CHAT */}
-        <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.1}} className="widget w-ai lg-span-6">
-          <span className="widget-label">Ape Brain Console</span>
-          <div className="chat-container">
-            {messages.map((m, i) => (
-              <div key={i} className={`msg ${m.role === 'user' ? 'msg-user' : 'msg-ape'}`}>
-                {m.content}
+          {/* 2. TRADING LAB (Col 4) */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card w-trading" style={{ gridColumn: 'span 4' }}>
+            <div className="card-head">
+              <span className="card-title" style={{ color: 'var(--neon-green)' }}><Activity size={14} /> PIONEX SIGNAL</span>
+              <span style={{ fontSize: '10px', background: 'rgba(16,185,129,0.2)', color: 'var(--neon-green)', padding: '2px 8px', borderRadius: '4px' }}>LIVE</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '20px' }}>
+              <div>
+                <div style={{ fontSize: '12px', color: '#888' }}>BTC/USDT</div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: 'white' }}>$102,450</div>
               </div>
-            ))}
-            <div ref={chatEndRef} />
-          </div>
-          <div className="chat-input-wrapper">
-            <input 
-              className="chat-input" 
-              placeholder="Ej: 'Inicia compra en BTC' o '¿Cómo va el clima?'" 
-              value={inputMsg}
-              onChange={(e) => setInputMsg(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            />
-            <button className="chat-send" onClick={sendMessage}><Send size={18}/></button>
-          </div>
-        </motion.div>
-
-        {/* WIDGET 3: EMPIRE MANAGEMENT */}
-        <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="widget w-projects lg-span-8">
-          <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '25px'}}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-              <Layers color="var(--amber)" size={24}/>
-              <h2 style={{margin: 0, fontSize: '20px', fontWeight: 800}}>Empire Projects</h2>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '12px', color: '#888' }}>Trend</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--neon-green)' }}>BULLISH 🚀</div>
+              </div>
             </div>
-            <PlusCircle color="var(--amber)" size={24} style={{cursor: 'pointer'}}/>
-          </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
+              <button className="btn-trading" style={{ background: 'var(--neon-green)' }}>BUY</button>
+              <button className="btn-trading" style={{ background: '#ef4444', color: 'white' }}>SELL</button>
+            </div>
+          </motion.div>
 
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px'}}>
-            <div>
-              <p className="widget-label" style={{marginBottom: '15px', color: 'rgba(245, 158, 11, 0.5)'}}>Pipeline Activo</p>
-              <div className="project-item">
-                <Rocket size={18} color="var(--amber)"/>
-                <div style={{flex: 1}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px'}}>
-                    <span>ApeOS Dashboard V3</span>
-                    <span>85%</span>
+          {/* 3. APE CHAT (Col 4) */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card w-ai" style={{ gridColumn: 'span 4' }}>
+            <div className="card-head">
+              <span className="card-title" style={{ color: 'var(--neon-purple)' }}><Terminal size={14} /> APE BRAIN</span>
+            </div>
+            <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '12px', marginBottom: '12px', overflow: 'hidden' }}>
+              <p style={{ fontSize: '12px', color: '#aaa', margin: '0 0 8px 0' }}>&gt; Analizando mercado...</p>
+              <p style={{ fontSize: '12px', color: 'var(--neon-purple)', margin: 0 }}>&gt; Oportunidad detectada en Arbitraje.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input 
+                type="text" 
+                placeholder="Send command..." 
+                value={inputCmd}
+                onChange={(e) => setInputCmd(e.target.value)}
+                style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', padding: '8px 12px', color: 'white', fontSize: '12px' }}
+              />
+              <button style={{ background: 'var(--neon-purple)', border: 'none', borderRadius: '8px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <Send size={16} color="white" />
+              </button>
+            </div>
+          </motion.div>
+
+          {/* 4. DAILY VENTURES / PROJECTS (Col 8) */}
+          <div className="card w-projects" style={{ gridColumn: 'span 8', minHeight: '300px' }}>
+            <div className="card-head">
+              <span className="card-title" style={{ color: 'var(--neon-amber)' }}><Briefcase size={14} /> PROJECT PIPELINE</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              {/* Columna Proyectos */}
+              <div>
+                <h3 style={{ fontSize: '14px', color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>Active Builds</h3>
+                {[
+                  { name: 'ClawBot V2', progress: 85, color: 'var(--neon-green)' },
+                  { name: 'Notion Sync API', progress: 40, color: 'var(--neon-cyan)' },
+                  { name: 'ApeOS Dashboard', progress: 100, color: 'var(--neon-purple)' }
+                ].map(p => (
+                  <div key={p.name} style={{ margin: '15px 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
+                      <span>{p.name}</span>
+                      <span>{p.progress}%</span>
+                    </div>
+                    <div style={{ height: '4px', background: '#222', borderRadius: '2px' }}>
+                      <div style={{ width: `${p.progress}%`, background: p.color, height: '100%', borderRadius: '2px' }}></div>
+                    </div>
                   </div>
-                  <div className="progress-track"><div className="progress-fill" style={{width: '85%'}}></div></div>
-                </div>
+                ))}
               </div>
-              <div className="project-item">
-                <Shield size={18} color="var(--amber)"/>
-                <div style={{flex: 1}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px'}}>
-                    <span>Trading Engine Security</span>
-                    <span>40%</span>
+
+              {/* Columna Tareas Rápidas */}
+              <div style={{ borderLeft: '1px solid #222', paddingLeft: '20px' }}>
+                <h3 style={{ fontSize: '14px', color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>Daily Focus</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '13px', color: '#ccc' }}>
+                    <CheckCircle size={14} color="var(--neon-green)" /> Revisar Logs de AWS
                   </div>
-                  <div className="progress-track"><div className="progress-fill" style={{width: '40%'}}></div></div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '13px', color: '#ccc' }}>
+                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid #555' }}></div> Conectar API Pionex
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '13px', color: '#ccc' }}>
+                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid #555' }}></div> Definir Micro-SaaS #1
+                  </div>
                 </div>
               </div>
             </div>
-            <div>
-              <p className="widget-label" style={{marginBottom: '15px', color: 'rgba(245, 158, 11, 0.5)'}}>Business Ideas</p>
-              {['SAAS Logística Local', 'Consultoría AI Química', 'Bot Arbitraje'].map((idea, i) => (
-                <div key={idea} style={{fontSize: '13px', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '10px'}}>
-                  <span style={{color: 'var(--amber)'}}>{i+1}.</span> {idea}
-                </div>
-              ))}
-            </div>
           </div>
-        </motion.div>
 
-        {/* WIDGET 4: CLIMA */}
-        <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.3}} className="widget w-weather lg-span-4">
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
-            <div style={{padding: '6px 12px', background: 'rgba(6, 182, 212, 0.1)', borderRadius: '8px', fontSize: '10px', color: 'var(--cyan)', fontWeight: 800}}>
-              <MapPin size={10} style={{marginRight: 5}}/> {location.city}
+          {/* 5. WEATHER & RECOMMENDATION (Col 4) */}
+          <div className="card w-env" style={{ gridColumn: 'span 4' }}>
+            <div className="card-head">
+              <span className="card-title" style={{ color: 'var(--neon-cyan)' }}><MapPin size={14} /> ENTORNO</span>
             </div>
-            <div style={{fontSize: '36px', fontWeight: 900}}>{location.temp}</div>
-          </div>
-          
-          <div style={{margin: '30px 0'}}>
-            <div style={{fontSize: '16px', fontWeight: 600, color: '#ccc'}}>{location.condition}</div>
-            <div style={{display: 'flex', gap: '20px', marginTop: '10px'}}>
-              <div style={{fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '5px'}}><Wind size={14} color="var(--cyan)"/> 12km/h</div>
-              <div style={{fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '5px'}}><Droplets size={14} color="var(--cyan)"/> 44% Hum.</div>
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <CloudRain size={48} color="var(--neon-cyan)" />
+              <div style={{ fontSize: '32px', fontWeight: 800, margin: '10px 0' }}>18°C</div>
+              <div style={{ color: '#888', fontSize: '14px' }}>Benicàssim, Spain</div>
+            </div>
+            <div style={{ background: 'rgba(6, 182, 212, 0.05)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(6, 182, 212, 0.1)' }}>
+              <p style={{ fontSize: '10px', fontWeight: 800, color: 'var(--neon-cyan)', marginBottom: '5px' }}>DAILY RECOMMENDATION</p>
+              <p style={{ fontSize: '12px', fontStyle: 'italic', color: '#999' }}>
+                "Cielo despejado en Benicàssim. Momento ideal para networking o revisión táctica en exteriores."
+              </p>
             </div>
           </div>
 
-          <div style={{background: 'rgba(6, 182, 212, 0.05)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(6, 182, 212, 0.1)'}}>
-            <p style={{fontSize: '10px', fontWeight: 800, color: 'var(--cyan)', marginBottom: '5px'}}>DAILY RECOMMENDATION</p>
-            <p style={{fontSize: '12px', italic: 'italic', color: '#999'}}>
-              "Cielo despejado en Benicàssim. Momento ideal para networking o revisión táctica en exteriores."
-            </p>
-          </div>
-        </motion.div>
-
-      </main>
-
-      {/* --- MINI NAVBAR --- */}
-      <footer style={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-        <div style={{background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', padding: '10px', borderRadius: '24px', display: 'flex', gap: '10px'}}>
-          {[LayoutDashboard, Zap, Layers, Settings].map((Icon, i) => (
-            <button key={i} style={{background: i===0 ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', padding: '12px', borderRadius: '16px', cursor: 'pointer', color: i===0 ? 'white' : '#555'}}>
-              <Icon size={20}/>
-            </button>
-          ))}
         </div>
-      </footer>
-
+      </main>
     </div>
   );
 }
