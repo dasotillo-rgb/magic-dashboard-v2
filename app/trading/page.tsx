@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import Sidebar from '@/components/Sidebar';
-import TradingLab from '@/components/trading-lab/TradingLab';
+import Sidebar from '../../components/Sidebar';
+import TradingLab from '../../components/trading-lab/TradingLab';
 
 export default function TradingPage() {
   return (
