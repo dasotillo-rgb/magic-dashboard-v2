@@ -5,3 +5,4 @@ dist
 .env.viejo_backup
 .env.local.viejo_backup
 .env.local
+.vercel

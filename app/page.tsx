@@ -29,11 +29,8 @@ export default function InteractiveDashboard() {
       if (data.content) {
         setMessages([...newMessages, { role: 'assistant', content: data.content }]);
       }
-    } catch (e) {
-      console.error("Ape Connection Lost");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error("Ape connection lost"); }
+    finally { setLoading(false); }
   };
 
   if (!mounted) return <div className="bg-black min-h-screen" />;
@@ -55,8 +52,7 @@ export default function InteractiveDashboard() {
         </header>
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="flex-1 flex flex-col bg-[#0A0A0A] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden relative"
         >
           <div className="flex-1 p-8 overflow-y-auto space-y-6 scrollbar-hide">
@@ -68,40 +64,28 @@ export default function InteractiveDashboard() {
                 </div>
               )}
               {messages.map((m, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 10 }} 
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-4 p-4 rounded-2xl ${m.role === 'user' ? "bg-white/5" : ""}`}
-                >
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className={`flex gap-4 p-4 rounded-2xl ${m.role === 'user' ? "bg-white/5" : ""}`}>
                   <div className={m.role === 'user' ? "text-blue-400" : "text-purple-500"}>
                     {m.role === 'user' ? <Zap size={18} /> : <Cpu size={18} />}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-sm font-mono text-gray-200">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-1">
                       {m.role === 'user' ? "Commander" : "Ape OS"}
                     </p>
-                    <p className="font-mono text-sm text-gray-200 leading-relaxed">{m.content}</p>
+                    {m.content}
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-            {loading && <p className="text-purple-500 animate-pulse text-xs font-mono ml-10"># Decrypting signal...</p>}
+            {loading && <p className="text-purple-500 animate-pulse text-xs font-mono ml-10"># Processing...</p>}
           </div>
 
           <div className="p-8 bg-black/40 border-t border-white/5">
             <div className="flex gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 focus-within:border-purple-500/50 transition-all">
-              <input 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="Talk to Ape..."
-                className="flex-1 bg-transparent px-6 py-3 outline-none text-sm font-mono"
-              />
-              <button 
-                onClick={sendMessage} 
-                className="bg-white text-black h-12 w-12 flex items-center justify-center rounded-xl hover:bg-purple-600 hover:text-white transition-all shadow-lg"
-              >
+              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="Talk to Ape..." className="flex-1 bg-transparent px-6 py-3 outline-none text-sm font-mono" />
+              <button onClick={sendMessage} className="bg-white text-black h-12 w-12 flex items-center justify-center rounded-xl hover:bg-purple-600 hover:text-white transition-all">
                 <Send size={20} />
               </button>
             </div>
