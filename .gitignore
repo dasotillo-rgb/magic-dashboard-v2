@@ -141,3 +141,5 @@ cython_debug/
 node_modules
 .next
 .env*
+.env.local
+.env
