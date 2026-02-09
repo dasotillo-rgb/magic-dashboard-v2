@@ -1,0 +1,10 @@
+● openclaw-gateway.service - OpenClaw Gateway (v2026.2.3-1)
+     Loaded: loaded (]8;;file://ip-172-31-40-27/home/ubuntu/.config/systemd/user/openclaw-gateway.service/home/ubuntu/.config/systemd/user/openclaw-gateway.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: activating (auto-restart) (Result: exit-code) since Sun 2026-02-08 21:20:16 UTC; 342ms ago
+    Process: 241607 ExecStart=/usr/bin/node /home/ubuntu/.npm-global/lib/node_modules/openclaw/dist/index.js gateway --port 18789 [0;1;31m(code=exited, status=1/FAILURE)[0m
+   Main PID: 241607 (code=exited, status=1/FAILURE)
+        CPU: 2.303s
+
+Feb 08 21:20:16 ip-172-31-40-27 systemd[856]: [0;1;39m[0;1;31m[0;1;39mopenclaw-gateway.service: Main process exited, code=exited, status=1/FAILURE[0m
+Feb 08 21:20:16 ip-172-31-40-27 systemd[856]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mopenclaw-gateway.service: Failed with result 'exit-code'.[0m
+Feb 08 21:20:16 ip-172-31-40-27 systemd[856]: openclaw-gateway.service: Consumed 2.303s CPU time.

@@ -1,0 +1,20 @@
+[0;1;32m●[0m openclaw-gateway.service - OpenClaw Gateway (v2026.2.3-1)
+     Loaded: loaded (]8;;file://ip-172-31-40-27/home/ubuntu/.config/systemd/user/openclaw-gateway.service/home/ubuntu/.config/systemd/user/openclaw-gateway.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Sun 2026-02-08 21:23:33 UTC; 1min 43s ago
+   Main PID: 241985 (openclaw-gatewa)
+      Tasks: 11 (limit: 4517)
+     Memory: 319.9M (peak: 372.4M)
+        CPU: 6.732s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/openclaw-gateway.service
+             └─[0;38;5;245m241985 openclaw-gateway[0m
+
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]:     at node:internal/deps/undici/undici:14902:13
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]:     at processTicksAndRejections (node:internal/process/task_queues:105:5)
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.789Z [canvas] host mounted at http://127.0.0.1:18789/__openclaw__/canvas/ (root /home/ubuntu/.openclaw/canvas)
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.799Z [heartbeat] started
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.800Z [gateway] agent model: google/gemini-2.0-pro
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.801Z [gateway] listening on ws://127.0.0.1:18789 (PID 241985)
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.802Z [gateway] listening on ws://[::1]:18789
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.803Z [gateway] log file: /tmp/openclaw/openclaw-2026-02-08.log
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.805Z [browser/service] Browser control service ready (profiles=2)
+Feb 08 21:24:23 ip-172-31-40-27 node[241985]: 2026-02-08T21:24:23.856Z [telegram] [default] starting provider (@ClawBusinessBot)
