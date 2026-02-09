@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DesktopSidebar } from "./components/Sidebar";
+import { DesktopSidebar } from "@/components/Sidebar";
 import { Zap, Send, Terminal, Cpu } from 'lucide-react';
 import TradingViewWidget from '@/components/trading-lab/TradingViewWidget';
 
