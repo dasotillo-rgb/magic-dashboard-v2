@@ -1,0 +1,4 @@
+- **[2026-02-10] Fix: Pionex Implementation.**
+  - Removed phantom npm package `pionex-api-client`.
+  - Implemented manual `lib/pionex.ts` using native fetch.
+  - Successfully built Trading Lab components.
