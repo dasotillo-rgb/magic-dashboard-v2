@@ -1,21 +1,31 @@
-import { RestClient } from 'pionex-api-client';
+// lib/pionex.ts
+// Cliente manual sin dependencias externas rotas
+const BASE_URL = 'https://api.pionex.com';
 
-// Asegúrate de tener NEXT_PUBLIC_PIONEX_API_KEY y PIONEX_API_SECRET en tu .env.local
-const API_KEY = process.env.NEXT_PUBLIC_PIONEX_API_KEY || '';
-const API_SECRET = process.env.PIONEX_API_SECRET || '';
-
-export const pionexClient = new RestClient({
-    apiKey: API_KEY,
-    apiSecret: API_SECRET,
-});
-
-export const getPionexMarketData = async (symbol: string) => {
+export const getPionexCandles = async (symbol: string) => {
     try {
-        // Wrapper para obtener datos. APE ajustará esto según la respuesta real de la API.
-        const ticker = await pionexClient.getTicker({ symbol });
-        return ticker;
+        // Formato Pionex: BTC_USDT
+        const formattedSymbol = symbol.replace('/', '_').replace('-', '_'); 
+        
+        // Endpoint público de velas (KLines)
+        // Intervalo 1m para datos rápidos
+        const response = await fetch(`${BASE_URL}/api/v1/market/klines?symbol=${formattedSymbol}&interval=1m&limit=100`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            next: { revalidate: 10 }
+        });
+
+        if (!response.ok) throw new Error('Pionex API Error');
+        
+        const data = await response.json();
+        
+        // La API de Pionex devuelve { data: { klines: [...] } }
+        if (data.data && data.data.klines) {
+            return data.data.klines; 
+        }
+        return [];
     } catch (error) {
-        console.error("Error fetching Pionex market data:", error);
-        return null;
+        console.error("Error fetching Pionex candles:", error);
+        return []; 
     }
 };
