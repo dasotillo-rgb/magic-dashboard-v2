@@ -8,6 +8,9 @@ export function middleware(request: NextRequest) {
   if (pathname !== '/login' && authToken !== 'Apedashboard') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
+  if (pathname === '/login' && authToken === 'Apedashboard') {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
   return NextResponse.next();
 }
 
